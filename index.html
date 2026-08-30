@@ -696,16 +696,20 @@
         }
         /* Wide report modifier (Aggregated Master Station Records — landscape) */
         #reportPrintRoot.psr-wide .psr-wide-table {
-            font-size: 8.3px;
+            font-size: 7.6px;
+            table-layout: fixed;
+            width: 100%;
         }
         #reportPrintRoot.psr-wide .psr-wide-table th,
         #reportPrintRoot.psr-wide .psr-wide-table td {
-            padding: 4px 5px;
-            white-space: nowrap;
+            padding: 3px 4px;
+            white-space: normal;
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
         #reportPrintRoot.psr-wide .psr-wide-table td.psr-station {
             white-space: normal;
-            max-width: 130px;
+            word-break: break-word;
         }
         #reportPrintRoot .psr-total-row td {
             background: #e5e5e5 !important;
@@ -768,11 +772,11 @@
         }
         /* A3 paper modifier — scales fonts/padding/logo up so content properly fills the larger sheet */
         #reportPrintRoot.psr-wide.psr-a3 .psr-wide-table {
-            font-size: 12px;
+            font-size: 11px;
         }
         #reportPrintRoot.psr-wide.psr-a3 .psr-wide-table th,
         #reportPrintRoot.psr-wide.psr-a3 .psr-wide-table td {
-            padding: 7px 10px;
+            padding: 6px 7px;
         }
         #reportPrintRoot.psr-a3 .psr-brand-name {
             font-size: 24px;
@@ -3243,7 +3247,7 @@
             }
             const size = paperSize || 'A4';
             styleTag.textContent = orientation === 'landscape' ?
-                `@page { size: ${size} landscape; margin: 12mm 14mm; }` :
+                `@page { size: ${size} landscape; margin: 8mm 6mm; }` :
                 `@page { size: ${size} portrait; margin: 14mm 12mm; }`;
         }
 
@@ -3441,7 +3445,6 @@
             }
 
             let lowCount = 0;
-            const actionItems = [];
             const rowsHtml = stations.map((s, i) => {
                 const threshold = getStationThreshold(s.station);
                 const s91Low = s.s91 < threshold && s.s91 > 0;
@@ -3449,13 +3452,6 @@
                 const dieselLow = s.diesel < threshold && s.diesel > 0;
                 const isFinished = s.status && s.status.toLowerCase().includes('finished');
                 if (s91Low || s95Low || dieselLow) lowCount++;
-                if (s91Low || s95Low || dieselLow || isFinished) {
-                    const lowFuels = [];
-                    if (s91Low) lowFuels.push('91');
-                    if (s95Low) lowFuels.push('95');
-                    if (dieselLow) lowFuels.push('Diesel');
-                    actionItems.push({ station: s.station, lowFuels, isFinished, status: s.status });
-                }
                 const statusHtml = isFinished ?
                     `<span class="psr-status-finished">${s.status}</span>` :
                     (s.status || '\u2014');
@@ -3469,24 +3465,6 @@
                         <td>${statusHtml}</td>
                     </tr>`;
             }).join('');
-
-            const actionHtml = actionItems.length > 0 ? `
-                <div class="psr-action-box">
-                    <div class="psr-action-title">\u26A0 Action Needed &mdash; ${actionItems.length} Station${actionItems.length > 1 ? 's' : ''}</div>
-                    <div class="psr-action-grid">
-                        ${actionItems.map(a => `
-                            <div class="psr-action-item${a.isFinished ? ' finished' : ''}">
-                                <span class="psr-action-station">${a.station}</span>
-                                <span class="psr-action-detail">${a.isFinished ? 'SUPPLY FINISHED' : ('LOW STOCK: ' + a.lowFuels.join(', '))}</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            ` : `
-                <div class="psr-action-box ok">
-                    <div class="psr-action-title">\u2713 All stations within safe stock levels &mdash; no action needed</div>
-                </div>
-            `;
 
             const metaHtml = `
                 <span>Generated: <strong>${new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })} &middot; ${new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}</strong></span>
@@ -3515,7 +3493,6 @@
                 reportTitle: 'Stock Status Report',
                 reportSub: 'Continuous stock levels by station',
                 metaHtml,
-                actionHtml,
                 bodyHtml: tableHtml,
                 wide: false
             });
@@ -3589,6 +3566,15 @@
 
             const tableHtml = `
                 <table class="psr-wide-table">
+                    <colgroup>
+                        <col style="width:2.5%;">
+                        <col style="width:5.5%;">
+                        <col style="width:4.5%;">
+                        <col style="width:12.5%;">
+                        <col style="width:5%;"><col style="width:5%;"><col style="width:5%;"><col style="width:5%;"><col style="width:5%;">
+                        <col style="width:5%;"><col style="width:5%;"><col style="width:5%;"><col style="width:5%;"><col style="width:5%;">
+                        <col style="width:5%;"><col style="width:5%;"><col style="width:5%;"><col style="width:5%;"><col style="width:5%;">
+                    </colgroup>
                     <thead>
                         <tr>
                             <th rowspan="2" style="text-align:center;">#</th>
