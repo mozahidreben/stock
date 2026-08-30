@@ -1,0 +1,3940 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+    <title>Reben Operations Dashboard</title>
+
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Inter:opsz,wght@14..32,400;14..32,500;14..32,600;14..32,700;14..32,800&family=Playfair+Display:ital,wght@0,700;1,700&display=swap" rel="stylesheet" />
+
+    <!-- Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com">
+    </script>
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js">
+    </script>
+    <!-- FontAwesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+    <!-- html2canvas for snapshots -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js">
+    </script>
+
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    colors: {
+                        brand: {
+                            gold: '#dc2626',
+                            goldLight: '#f0d68a',
+                            goldDark: '#b8922f',
+                            crimson: '#dc2626',
+                            crimsonLight: '#fca5a5',
+                            emerald: '#10b981',
+                            navy: '#0b1426',
+                            slate: '#4b5563',
+                            slateLight: '#9ca3af',
+                            lightBg: '#f8fafc',
+                            cardBg: '#ffffff',
+                            borderLight: '#e5e7eb',
+                            textPrimary: '#111827',
+                            textSecondary: '#4b5563',
+                            textMuted: '#6b7280',
+                        }
+                    },
+                    fontFamily: {
+                        sans: ['Inter', 'system-ui', 'sans-serif'],
+                        display: ['Playfair Display', 'serif'],
+                    },
+                    boxShadow: {
+                        'premium': '0 1px 3px rgba(0,0,0,0.04), 0 1px 2px rgba(0,0,0,0.02)',
+                        'premium-lg': '0 4px 20px rgba(0,0,0,0.06), 0 1px 3px rgba(0,0,0,0.04)',
+                    },
+                }
+            }
+        }
+    </script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        html {
+            -webkit-text-size-adjust: 100%;
+            text-size-adjust: 100%;
+            overflow-x: hidden;
+            max-width: 100%;
+        }
+        body {
+            background: #f6f8fc;
+            font-family: 'Inter', system-ui, sans-serif;
+            color: #111827;
+            min-height: 100vh;
+            min-height: 100dvh;
+            overflow-x: hidden;
+            width: 100%;
+            -webkit-tap-highlight-color: transparent;
+            scroll-behavior: smooth;
+        }
+        img, svg, canvas {
+            max-width: 100%;
+        }
+        button,
+        a,
+        .month-tag,
+        .sync-btn {
+            touch-action: manipulation;
+        }
+        /* Comfortable tap targets on touch screens without changing desktop density */
+        @media (max-width: 767px) {
+            header button,
+            #section-records .no-print button,
+            #section-stock-status .no-print button {
+                min-height: 38px;
+            }
+            .pagination-controls button {
+                min-height: 32px;
+                min-width: 32px;
+            }
+            .month-tag {
+                min-height: 30px;
+            }
+        }
+        /* Respect notch / home-indicator safe areas */
+        header {
+            padding-left: env(safe-area-inset-left);
+            padding-right: env(safe-area-inset-right);
+        }
+        main#main-content {
+            padding-left: max(0.75rem, env(safe-area-inset-left));
+            padding-right: max(0.75rem, env(safe-area-inset-right));
+            padding-bottom: max(3rem, env(safe-area-inset-bottom));
+        }
+        @media (min-width: 640px) {
+            main#main-content {
+                padding-left: max(1.5rem, env(safe-area-inset-left));
+                padding-right: max(1.5rem, env(safe-area-inset-right));
+            }
+        }
+        @media (min-width: 1024px) {
+            main#main-content {
+                padding-left: max(2rem, env(safe-area-inset-left));
+                padding-right: max(2rem, env(safe-area-inset-right));
+            }
+        }
+        ::-webkit-scrollbar {
+            width: 5px;
+            height: 5px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #f1f5f9;
+            border-radius: 8px;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #dc2626;
+            border-radius: 8px;
+        }
+
+        .no-scrollbar::-webkit-scrollbar {
+            display: none;
+        }
+        .no-scrollbar {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+
+        .header-glow::after {
+            content: '';
+            position: absolute;
+            bottom: -1px;
+            left: 20%;
+            width: 60%;
+            height: 1.5px;
+            background: linear-gradient(90deg, transparent, #dc2626, #dc2626, #e7e6e4, transparent);
+            border-radius: 2px;
+            filter: blur(0.5px);
+        }
+        .gold-line {
+            height: 1.5px;
+            background: linear-gradient(90deg, transparent, #26dc3e, #b8922f, #2803f7, transparent);
+            border-radius: 2px;
+            filter: blur(0.5px);
+            opacity: 0.25;
+            margin-top: 12px;
+        }
+        .card-premium {
+            background: #ffffff;
+            border: 1px solid #eef2f6;
+            border-radius: 14px;
+            box-shadow: 0 1px 3px rgba(0, 0, 0, 0.03), 0 1px 2px rgba(0, 0, 0, 0.02);
+            transition: all 0.25s ease;
+        }
+        .card-premium:hover {
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.05), 0 1px 3px rgba(0, 0, 0, 0.04);
+            border-color: #e2e8f0;
+        }
+        .hover-lift {
+            transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.25s ease;
+        }
+        .hover-lift:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 25px rgba(0, 0, 0, 0.06), 0 1px 3px rgba(0, 0, 0, 0.04);
+        }
+
+        .premium-input {
+            background: #f8fafc;
+            border: 1px solid #e5e9f0;
+            color: #111827;
+            transition: all 0.25s ease;
+            border-radius: 10px;
+            padding: 10px 14px;
+            font-weight: 500;
+            font-size: 14px;
+            width: 100%;
+        }
+        .premium-input:focus {
+            border-color: #dc2626;
+            background: #ffffff;
+            outline: none;
+            box-shadow: 0 0 0 3px rgba(220, 38, 38, 0.08);
+        }
+
+        .month-tag {
+            transition: all 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
+            cursor: pointer;
+            user-select: none;
+            border: 1px solid #e5e9f0;
+            background: #ffffff;
+            color: #4b5563;
+            padding: 5px 14px;
+            border-radius: 9999px;
+            font-size: 12px;
+            font-weight: 600;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+        }
+        .month-tag:hover {
+            border-color: #dc2626;
+            color: #111827;
+            transform: translateY(-1px);
+        }
+        .month-tag.active {
+            background: #dc2626;
+            border-color: #dc2626;
+            color: #ffffff;
+            box-shadow: 0 2px 10px rgba(220, 38, 38, 0.18);
+        }
+
+        .table-scroll {
+            overflow-x: auto;
+            max-height: 650px;
+            overflow-y: auto;
+            display: block;
+            width: 100%;
+        }
+        table.premium-table {
+            display: table !important;
+            min-width: 1600px;
+            width: 100%;
+            border-collapse: separate !important;
+            border-spacing: 0;
+            table-layout: auto !important;
+        }
+        table.premium-table thead {
+            display: table-header-group !important;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        table.premium-table tbody {
+            display: table-row-group !important;
+        }
+        table.premium-table tfoot {
+            display: table-footer-group !important;
+            position: sticky;
+            bottom: 0;
+            z-index: 3;
+            background-color: #f8fafc;
+        }
+        table.premium-table tr {
+            display: table-row !important;
+        }
+        table.premium-table th,
+        table.premium-table td {
+            display: table-cell !important;
+            padding: 8px 10px;
+            font-size: 11px;
+            white-space: nowrap !important;
+            vertical-align: middle !important;
+            border-bottom: 1px solid #eef2f6;
+        }
+        table.premium-table thead th {
+            background: #f8fafc;
+            border: 1px solid #eef2f6;
+            color: #374151;
+            font-weight: 600;
+            letter-spacing: 0.03em;
+            text-transform: uppercase;
+            font-size: 10px;
+        }
+
+        .sticky-col {
+            position: sticky;
+            z-index: 2;
+            background-color: #ffffff;
+        }
+        .sticky-col.sl-no {
+            left: 0;
+            min-width: 48px;
+            max-width: 48px;
+            width: 48px;
+        }
+        .sticky-col.region {
+            left: 48px;
+            min-width: 80px;
+            max-width: 80px;
+            width: 80px;
+        }
+        .sticky-col.month {
+            left: 128px;
+            min-width: 80px;
+            max-width: 80px;
+            width: 80px;
+        }
+        .sticky-col.station {
+            left: 208px;
+            min-width: 130px;
+            max-width: 130px;
+            width: 130px;
+        }
+
+        thead th.sticky-col {
+            z-index: 5;
+            background-color: #f8fafc;
+        }
+        tfoot td.sticky-col {
+            background-color: #f8fafc;
+        }
+        table.premium-table th.sticky-col,
+        table.premium-table td.sticky-col {
+            border-right: 1px solid #eef2f6;
+        }
+        table.premium-table td.sticky-col.station {
+            border-right: 1px solid #eef2f6;
+        }
+        tfoot td {
+            background-color: #f8fafc;
+            font-weight: 600;
+            border-top: 2px solid #e5e9f0;
+        }
+
+        .sort-icon {
+            margin-left: 4px;
+            font-size: 9px;
+            opacity: 0.5;
+            transition: opacity 0.2s;
+        }
+        .sort-icon.active {
+            opacity: 1;
+            color: #dc2626;
+        }
+        th:hover .sort-icon {
+            opacity: 1;
+        }
+
+        .kpi-icon {
+            width: 36px;
+            height: 36px;
+            border-radius: 10px;
+            background: #f8fafc;
+            border: 1px solid #eef2f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #4b5563;
+            flex-shrink: 0;
+            transition: all 0.2s ease;
+        }
+        .kpi-icon-sm {
+            width: 30px;
+            height: 30px;
+            border-radius: 8px;
+            background: #f8fafc;
+            border: 1px solid #eef2f6;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex-shrink: 0;
+            color: #4b5563;
+            transition: all 0.2s ease;
+        }
+        .kpi-card:hover .kpi-icon,
+        .kpi-card:hover .kpi-icon-sm {
+            background: #ffffff;
+            border-color: #d1d9e6;
+        }
+
+        .status-dot {
+            width: 7px;
+            height: 7px;
+            border-radius: 50%;
+            background: #10b981;
+            animation: pulse-dot 2s ease-in-out infinite;
+        }
+        .status-dot.connecting {
+            background: #f59e0b;
+        }
+        .status-dot.error {
+            background: #dc2626;
+        }
+        @keyframes pulse-dot {
+            0%,
+            100% {
+                opacity: 1;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.4;
+                transform: scale(0.8);
+            }
+        }
+
+        .sync-btn {
+            background: linear-gradient(135deg, #dd2626, #e64f0a);
+            border: none;
+            color: #ffffff;
+            padding: 7px 20px;
+            border-radius: 9999px;
+            font-weight: 600;
+            font-size: 13px;
+            transition: all 0.25s ease;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            cursor: pointer;
+        }
+        .sync-btn:hover {
+            transform: scale(1.02);
+            box-shadow: 0 4px 15px rgba(220, 38, 38, 0.25);
+        }
+
+        .error-banner {
+            border-left: 4px solid #dc2626;
+            background: #fef2f2;
+            border-radius: 12px;
+            padding: 14px 20px;
+        }
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            background: #1f2937;
+            color: #ffffff;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 14px;
+            font-weight: 500;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            z-index: 9999;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: opacity 0.3s ease, transform 0.3s ease;
+            pointer-events: none;
+            box-shadow: 0 8px 30px rgba(0, 0, 0, 0.15);
+        }
+        .toast.show {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: auto;
+        }
+        .mobile-record-card {
+            padding: 14px;
+            background: #ffffff;
+        }
+        .mrc-grid {
+            grid-template-columns: 1fr 1fr;
+        }
+
+        .fuel-row-label {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 0.1em;
+            text-transform: uppercase;
+            color: #6b7280;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .fuel-row-label .badge-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            display: inline-block;
+            flex-shrink: 0;
+        }
+
+        .table-scroll::after {
+            content: '';
+            position: sticky;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 20px;
+            background: linear-gradient(to right, transparent, rgba(0, 0, 0, 0.03));
+            pointer-events: none;
+            display: block;
+            float: right;
+            z-index: 1;
+        }
+
+        @media print {
+            .no-print {
+                display: none !important;
+            }
+            .card-premium {
+                break-inside: avoid;
+                box-shadow: none !important;
+                border: 1px solid #ddd;
+            }
+            body {
+                background: white;
+            }
+            .table-scroll {
+                max-height: none;
+                overflow: visible;
+            }
+            table.premium-table thead {
+                position: static;
+            }
+            table.premium-table tfoot {
+                position: static;
+            }
+            .sticky-col {
+                position: static !important;
+            }
+        }
+
+        /* ===== STOCK STATUS PDF REPORT ===== */
+        #reportPrintRoot {
+            display: none;
+        }
+        @media print {
+            body.printing-report > *:not(#reportPrintRoot) {
+                display: none !important;
+            }
+            body.printing-report {
+                background: #ffffff !important;
+            }
+            body.printing-report #reportPrintRoot {
+                display: block !important;
+            }
+            @page {
+                margin: 14mm 12mm;
+            }
+        }
+        #reportPrintRoot {
+            font-family: 'Inter', system-ui, sans-serif;
+            color: #000000;
+            padding: 0 4px;
+        }
+        #reportPrintRoot .psr-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 16px;
+            border-bottom: 3px solid #000000;
+            padding-bottom: 14px;
+            margin-bottom: 4px;
+        }
+        #reportPrintRoot .psr-brand {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        #reportPrintRoot .psr-brand img {
+            height: 132px;
+            width: 132px;
+            object-fit: contain;
+        }
+        #reportPrintRoot .psr-logo-fallback {
+            height: 132px;
+            width: 132px;
+            border-radius: 20px;
+            background: #000000;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 800;
+            font-size: 48px;
+            flex-shrink: 0;
+        }
+        #reportPrintRoot .psr-brand-name {
+            font-size: 19px;
+            font-weight: 800;
+            letter-spacing: -0.01em;
+            line-height: 1.15;
+        }
+        #reportPrintRoot .psr-brand-sub {
+            font-size: 9.5px;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: #444444;
+            margin-top: 1px;
+        }
+        #reportPrintRoot .psr-title-block {
+            text-align: right;
+        }
+        #reportPrintRoot .psr-report-title {
+            font-size: 15px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        #reportPrintRoot .psr-report-sub {
+            font-size: 9.5px;
+            color: #444444;
+            margin-top: 2px;
+        }
+        #reportPrintRoot .psr-meta {
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 6px 18px;
+            font-size: 10.5px;
+            color: #222222;
+            margin: 12px 0 16px;
+            padding: 9px 14px;
+            border: 1px solid #999999;
+            border-radius: 4px;
+            background: #f4f4f4;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        #reportPrintRoot .psr-meta strong {
+            color: #000000;
+        }
+        #reportPrintRoot table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+        }
+        #reportPrintRoot thead {
+            display: table-header-group;
+        }
+        #reportPrintRoot tr {
+            page-break-inside: avoid;
+        }
+        #reportPrintRoot th {
+            background: #000000 !important;
+            color: #ffffff !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            text-align: left;
+            padding: 7px 10px;
+            font-size: 9.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border: 1px solid #000000;
+        }
+        #reportPrintRoot td {
+            padding: 6px 10px;
+            border: 1px solid #aaaaaa;
+            vertical-align: middle;
+        }
+        #reportPrintRoot tbody tr:nth-child(even) td {
+            background: #f2f2f2 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+        }
+        #reportPrintRoot td.psr-num {
+            text-align: center;
+            color: #555555;
+            font-weight: 600;
+            width: 34px;
+        }
+        #reportPrintRoot td.psr-station {
+            font-weight: 700;
+        }
+        #reportPrintRoot td.psr-stock.low {
+            font-weight: 800;
+        }
+        #reportPrintRoot td.psr-stock.low::after {
+            content: " \26A0 LOW";
+            font-size: 8.5px;
+            font-weight: 800;
+            letter-spacing: 0.03em;
+        }
+        #reportPrintRoot .psr-status-finished {
+            display: inline-block;
+            border: 1.5px solid #000000;
+            padding: 2px 9px;
+            border-radius: 10px;
+            font-weight: 800;
+            font-size: 9.5px;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+        }
+        #reportPrintRoot .psr-footer {
+            margin-top: 18px;
+            padding-top: 10px;
+            border-top: 1px solid #999999;
+            display: flex;
+            justify-content: space-between;
+            flex-wrap: wrap;
+            gap: 6px 16px;
+            font-size: 9px;
+            color: #555555;
+        }
+        /* Wide report modifier (Aggregated Master Station Records — landscape) */
+        #reportPrintRoot.psr-wide .psr-wide-table {
+            font-size: 8.3px;
+        }
+        #reportPrintRoot.psr-wide .psr-wide-table th,
+        #reportPrintRoot.psr-wide .psr-wide-table td {
+            padding: 4px 5px;
+            white-space: nowrap;
+        }
+        #reportPrintRoot.psr-wide .psr-wide-table td.psr-station {
+            white-space: normal;
+            max-width: 130px;
+        }
+        #reportPrintRoot .psr-total-row td {
+            background: #e5e5e5 !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            font-weight: 800;
+            border-top: 2px solid #000000;
+        }
+        /* Action Needed summary box */
+        #reportPrintRoot .psr-action-box {
+            border: 2px solid #000000;
+            border-radius: 6px;
+            padding: 10px 14px;
+            margin-bottom: 14px;
+            page-break-inside: avoid;
+        }
+        #reportPrintRoot .psr-action-box.ok {
+            border-style: dashed;
+            border-width: 1.5px;
+        }
+        #reportPrintRoot .psr-action-title {
+            font-size: 11.5px;
+            font-weight: 800;
+            text-transform: uppercase;
+            letter-spacing: 0.03em;
+            margin-bottom: 6px;
+        }
+        #reportPrintRoot .psr-action-box.ok .psr-action-title {
+            margin-bottom: 0;
+            font-weight: 700;
+        }
+        #reportPrintRoot .psr-action-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 10px;
+        }
+        #reportPrintRoot .psr-action-item {
+            display: flex;
+            flex-direction: column;
+            gap: 1px;
+            border: 1px solid #000000;
+            border-radius: 4px;
+            padding: 4px 8px;
+            min-width: 120px;
+        }
+        #reportPrintRoot .psr-action-item.finished {
+            background: #ededed !important;
+            -webkit-print-color-adjust: exact;
+            print-color-adjust: exact;
+            border-width: 1.5px;
+        }
+        #reportPrintRoot .psr-action-station {
+            font-size: 10.5px;
+            font-weight: 700;
+        }
+        #reportPrintRoot .psr-action-detail {
+            font-size: 8.5px;
+            font-weight: 700;
+            letter-spacing: 0.02em;
+        }
+        /* A3 paper modifier — scales fonts/padding/logo up so content properly fills the larger sheet */
+        #reportPrintRoot.psr-wide.psr-a3 .psr-wide-table {
+            font-size: 12px;
+        }
+        #reportPrintRoot.psr-wide.psr-a3 .psr-wide-table th,
+        #reportPrintRoot.psr-wide.psr-a3 .psr-wide-table td {
+            padding: 7px 10px;
+        }
+        #reportPrintRoot.psr-a3 .psr-brand-name {
+            font-size: 24px;
+        }
+        #reportPrintRoot.psr-a3 .psr-report-title {
+            font-size: 19px;
+        }
+        #reportPrintRoot.psr-a3 .psr-meta,
+        #reportPrintRoot.psr-a3 .psr-footer {
+            font-size: 13px;
+        }
+        #reportPrintRoot.psr-a3 .psr-brand img,
+        #reportPrintRoot.psr-a3 .psr-logo-fallback {
+            height: 160px;
+            width: 160px;
+        }
+
+        @keyframes blink-red {
+            0% {
+                opacity: 1;
+                color: #dc2626;
+            }
+            50% {
+                opacity: 0.25;
+                color: #dc2626;
+            }
+            100% {
+                opacity: 1;
+                color: #dc2626;
+            }
+        }
+        .blink-low {
+            animation: blink-red 1s ease-in-out infinite;
+            font-weight: 700;
+        }
+
+        @keyframes blink-badge {
+            0% {
+                opacity: 1;
+                background-color: #dc2626;
+                transform: scale(1);
+            }
+            50% {
+                opacity: 0.5;
+                background-color: #dc2626;
+                transform: scale(0.96);
+            }
+            100% {
+                opacity: 1;
+                background-color: #dc2626;
+                transform: scale(1);
+            }
+        }
+        .blink-badge {
+            animation: blink-badge 1.2s ease-in-out infinite;
+            display: inline-block;
+            background-color: #dc2626;
+            color: #ffffff;
+            font-weight: 700;
+            padding: 2px 12px;
+            border-radius: 9999px;
+            font-size: 12px;
+            letter-spacing: 0.02em;
+        }
+
+        /* Current Status KPI card — blinks only when a status value is present */
+        @keyframes status-card-pulse {
+            0%, 100% {
+                box-shadow: 0 0 0 0 rgba(220, 38, 38, 0.45);
+            }
+            50% {
+                box-shadow: 0 0 0 9px rgba(220, 38, 38, 0);
+            }
+        }
+        .status-blink-card {
+            animation: status-card-pulse 1.3s ease-in-out infinite;
+        }
+        .status-blink-text {
+            display: inline-block;
+            animation: blink-badge 1.2s ease-in-out infinite;
+            background-color: #dc2626;
+            color: #ffffff !important;
+            padding: 2px 12px;
+            border-radius: 9999px;
+            font-size: clamp(0.85rem, 1.2vw + 0.55rem, 1.1rem);
+            letter-spacing: 0.02em;
+        }
+
+        .status-table-wrap {
+            overflow-x: auto;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .status-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 13px;
+        }
+        .status-table th {
+            background: #f8fafc;
+            padding: 10px 14px;
+            text-align: left;
+            font-weight: 600;
+            color: #374151;
+            border-bottom: 2px solid #eef2f6;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .status-table td {
+            padding: 10px 14px;
+            border-bottom: 1px solid #f1f5f9;
+            color: #111827;
+        }
+        .status-table tr:hover td {
+            background: #fafbfc;
+        }
+        .status-table .station-name {
+            font-weight: 600;
+            color: #1f2937;
+        }
+        .status-table .cont-stock {
+            font-weight: 500;
+        }
+        .status-table .cont-stock.low {
+            color: #dc2626;
+            font-weight: 700;
+        }
+        .status-table .serial-num {
+            font-weight: 600;
+            color: #9ca3af;
+            text-align: center;
+            font-size: 12px;
+        }
+
+        /* Mobile card view for Stock Status Overview — avoids horizontal drag */
+        .stock-mobile-card {
+            padding: 12px 14px;
+            background: #ffffff;
+        }
+        .stock-mobile-card .smc-chip {
+            border-radius: 10px;
+            padding: 6px 4px;
+            text-align: center;
+            border: 1px solid #f1f5f9;
+        }
+        .stock-mobile-card .smc-chip p:first-child {
+            font-size: 9px;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            margin-bottom: 2px;
+        }
+        .stock-mobile-card .smc-chip p:last-child {
+            font-size: 12px;
+            font-weight: 700;
+            word-break: break-word;
+        }
+
+        .kpi-value {
+            font-size: clamp(1.05rem, 1.6vw + 0.7rem, 1.5rem);
+            line-height: 1.2;
+            font-weight: 700;
+            letter-spacing: -0.02em;
+            word-break: break-word;
+        }
+        .kpi-label {
+            font-size: 0.65rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            text-transform: uppercase;
+            color: #8b95a9;
+        }
+        .kpi-card {
+            transition: all 0.2s ease;
+            padding: 16px 18px;
+        }
+        .kpi-card .gold-line {
+            margin-top: 10px;
+        }
+        @media (max-width: 480px) {
+            .kpi-card {
+                padding: 12px 14px;
+            }
+            .kpi-icon {
+                width: 30px;
+                height: 30px;
+            }
+        }
+
+        .chart-container {
+            position: relative;
+            height: 260px;
+            width: 100%;
+        }
+        @media (max-width: 768px) {
+            .chart-container {
+                height: 220px;
+            }
+        }
+        @media (max-width: 480px) {
+            .chart-container {
+                height: 190px;
+            }
+        }
+
+        .product-card {
+            padding: 16px 18px;
+        }
+        .product-card .kpi-value {
+            font-size: clamp(0.95rem, 1.3vw + 0.6rem, 1.25rem);
+        }
+        @media (max-width: 480px) {
+            .product-card {
+                padding: 12px 14px;
+            }
+        }
+
+        /* Sticky header (64px) + sticky quick-nav (~46px) cover the top of the
+           viewport, so anchor targets need scroll-margin-top or clicking a
+           quick-nav link appears to land one section too far down. */
+        #section-overview,
+        #section-stock-status,
+        #section-91,
+        #section-95,
+        #section-diesel,
+        #section-comparison,
+        #section-charts,
+        #section-records {
+            scroll-margin-top: 122px;
+        }
+        @media (max-width: 639px) {
+            #section-overview,
+            #section-stock-status,
+            #section-91,
+            #section-95,
+            #section-diesel,
+            #section-comparison,
+            #section-charts,
+            #section-records {
+                scroll-margin-top: 118px;
+            }
+        }
+
+        .nav-link {
+            position: relative;
+            transition: all 0.2s ease;
+        }
+        .nav-link::after {
+            content: '';
+            position: absolute;
+            bottom: -2px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 2px;
+            background: #dc2626;
+            border-radius: 2px;
+            transition: width 0.25s ease;
+        }
+        .nav-link:hover::after {
+            width: 60%;
+        }
+
+        /* Skeleton loading */
+        .skeleton {
+            background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 8px;
+        }
+        @keyframes shimmer {
+            0% {
+                background-position: -200% 0;
+            }
+            100% {
+                background-position: 200% 0;
+            }
+        }
+
+        /* Pagination controls */
+        .pagination-controls {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 0;
+            flex-wrap: wrap;
+            background: #f8fafc;
+            border-top: 1px solid #eef2f6;
+        }
+        .pagination-controls button {
+            padding: 4px 12px;
+            border: 1px solid #d1d9e6;
+            border-radius: 6px;
+            background: white;
+            font-size: 12px;
+            font-weight: 500;
+            color: #374151;
+            cursor: pointer;
+            transition: all 0.15s ease;
+        }
+        .pagination-controls button:hover:not(:disabled) {
+            background: #f1f5f9;
+            border-color: #dc2626;
+        }
+        .pagination-controls button:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+        .pagination-controls .page-info {
+            font-size: 13px;
+            font-weight: 500;
+            color: #4b5563;
+        }
+        .pagination-controls .page-btn.active {
+            background: #dc2626;
+            color: white;
+            border-color: #dc2626;
+        }
+        .pagination-controls .page-btn {
+            min-width: 32px;
+            text-align: center;
+        }
+
+        /* ===== DARK MODE ===== */
+        html.dark {
+            color-scheme: dark;
+        }
+        html.dark body {
+            background: #0b1220;
+            color: #e2e8f0;
+        }
+        html.dark .card-premium {
+            background: #111827;
+            border-color: #1f2937 !important;
+        }
+        html.dark header,
+        html.dark nav {
+            background-color: #0f172a !important;
+        }
+        /* Generic Tailwind utility overrides (attribute-selector catches all opacity variants too,
+           e.g. bg-white/70, bg-gray-50/60, so every shade variant used in the markup is covered) */
+        html.dark [class*="bg-white"] {
+            background-color: #111827 !important;
+        }
+        html.dark [class*="bg-gray-50"],
+        html.dark [class*="bg-gray-100"] {
+            background-color: #1e293b !important;
+        }
+        html.dark [class*="bg-gray-200"] {
+            background-color: #243244 !important;
+        }
+        html.dark [class*="bg-gray-300"] {
+            background-color: #2b3b4e !important;
+        }
+        html.dark [class*="bg-gray-800"] {
+            background-color: #0b1220 !important;
+        }
+        html.dark [class*="bg-red-50"],
+        html.dark [class*="bg-emerald-50"],
+        html.dark [class*="bg-amber-50"],
+        html.dark [class*="bg-blue-50"],
+        html.dark [class*="bg-pink-50"],
+        html.dark [class*="bg-cyan-50"],
+        html.dark [class*="bg-green-50"],
+        html.dark [class*="bg-yellow-50"] {
+            background-color: rgba(255, 255, 255, 0.045) !important;
+        }
+        html.dark [class*="bg-red-100"],
+        html.dark [class*="bg-emerald-100"],
+        html.dark [class*="bg-amber-100"],
+        html.dark [class*="bg-blue-100"] {
+            background-color: rgba(255, 255, 255, 0.08) !important;
+        }
+        html.dark [class*="text-gray-900"],
+        html.dark [class*="text-gray-800"] {
+            color: #f1f5f9 !important;
+        }
+        html.dark [class*="text-gray-700"] {
+            color: #e2e8f0 !important;
+        }
+        html.dark [class*="text-gray-600"],
+        html.dark [class*="text-gray-500"] {
+            color: #94a3b8 !important;
+        }
+        html.dark [class*="text-gray-400"],
+        html.dark [class*="text-gray-300"] {
+            color: #64748b !important;
+        }
+        html.dark [class*="border-gray-100"],
+        html.dark [class*="border-gray-200"],
+        html.dark [class*="border-gray-300"] {
+            border-color: #1f2937 !important;
+        }
+        html.dark .premium-input {
+            background: #0f172a;
+            border-color: #243244;
+            color: #e2e8f0;
+        }
+        html.dark .premium-input::placeholder {
+            color: #475569;
+        }
+        html.dark .premium-input:focus {
+            background: #111827;
+        }
+        html.dark .month-tag {
+            background: #111827;
+            border-color: #243244;
+            color: #94a3b8;
+        }
+        html.dark .month-tag:hover {
+            color: #f1f5f9;
+        }
+        html.dark .month-tag.active {
+            background: #dc2626;
+            border-color: #dc2626;
+            color: #ffffff;
+        }
+        html.dark .status-table th {
+            background: #111827 !important;
+            color: #e2e8f0 !important;
+            border-color: #243244 !important;
+        }
+        html.dark .status-table td {
+            border-color: #1f2937 !important;
+            color: #e2e8f0;
+        }
+        html.dark .status-table tbody tr:hover td {
+            background: #0f172a !important;
+        }
+        html.dark table.premium-table thead th {
+            background: #111827 !important;
+            color: #cbd5e1 !important;
+            border-color: #1f2937 !important;
+        }
+        html.dark table.premium-table tfoot {
+            background: #111827 !important;
+        }
+        html.dark tfoot td,
+        html.dark tfoot td.sticky-col {
+            background-color: #111827 !important;
+            border-top-color: #243244 !important;
+        }
+        html.dark table.premium-table td,
+        html.dark table.premium-table th {
+            border-color: #1f2937 !important;
+        }
+        html.dark .sticky-col {
+            background-color: #111827 !important;
+        }
+        html.dark .pagination-controls {
+            background: #111827;
+            border-color: #1f2937 !important;
+        }
+        html.dark .pagination-controls button {
+            background: #0f172a;
+            border-color: #243244;
+            color: #cbd5e1;
+        }
+        html.dark .pagination-controls .page-info {
+            color: #94a3b8;
+        }
+        html.dark .kpi-icon,
+        html.dark .kpi-icon-sm {
+            background: #0f172a !important;
+            border-color: #1f2937;
+        }
+        html.dark .mobile-record-card {
+            background: #111827;
+        }
+        html.dark .stock-mobile-card {
+            background: #111827;
+            border-color: #1f2937 !important;
+        }
+        html.dark .stock-mobile-card .station-name,
+        html.dark .stock-mobile-card span.text-gray-800 {
+            color: #e2e8f0;
+        }
+        html.dark .smc-chip {
+            border-color: #1f2937 !important;
+            background: #0f172a !important;
+        }
+        html.dark .toast {
+            background: #1e293b;
+        }
+        html.dark .skeleton {
+            background: linear-gradient(90deg, #1e293b 25%, #263243 50%, #1e293b 75%);
+            background-size: 200% 100%;
+        }
+        html.dark ::-webkit-scrollbar-track {
+            background: #111827;
+        }
+        html.dark ::-webkit-scrollbar-thumb {
+            background: #334155;
+        }
+        html.dark .header-glow {
+            opacity: 0.5;
+        }
+        /* Notification / error banners keep their accent color but flip to dark surfaces */
+        html.dark #notificationBanner {
+            background-color: #241f0d !important;
+        }
+        html.dark #notificationBanner p {
+            color: #fde68a !important;
+        }
+        html.dark .error-banner {
+            background: #2a1416 !important;
+        }
+        /* The printable PDF report is always light/B&W regardless of theme */
+        html.dark #reportPrintRoot {
+            color: #000000;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- TOAST -->
+    <div id="toast" class="toast" role="alert" aria-live="polite">
+        <i class="fa-solid fa-circle-check text-emerald-400"></i>
+        <span id="toastMessage">Data synced successfully!</span>
+    </div>
+
+    <!-- NOTIFICATION BANNER -->
+    <div id="notificationBanner" class="hidden fixed top-20 left-0 right-0 z-40 mx-4 md:mx-auto max-w-3xl bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg shadow-lg">
+        <div class="flex items-start">
+            <div class="flex-shrink-0">
+                <i class="fa-solid fa-triangle-exclamation text-yellow-500 text-lg"></i>
+            </div>
+            <div class="ml-3 flex-1">
+                <p class="text-sm font-medium text-yellow-800" id="notificationText">Alert: High loss detected in some months!</p>
+            </div>
+            <button onclick="document.getElementById('notificationBanner').classList.add('hidden')" class="ml-auto text-yellow-600 hover:text-yellow-800">
+                <i class="fa-solid fa-times"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- HEADER -->
+    <header class="sticky top-0 z-50 bg-white border-b border-gray-100 shadow-sm">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2 relative">
+            <div class="header-glow absolute bottom-0 left-0 w-full"></div>
+
+            <div class="flex items-center gap-2 sm:gap-3 min-w-0">
+                <img src="company-logo.png" alt="Company Logo" class="h-8 sm:h-9 w-auto object-contain rounded flex-shrink-0" onerror="this.onerror=null; this.style.display='none'; this.nextElementSibling.style.display='flex';" />
+                <div class="h-8 w-8 sm:h-9 sm:w-9 rounded-lg bg-gradient-to-br from-emerald-500 to-emerald-700 flex items-center justify-center text-white font-bold text-base shadow-sm flex-shrink-0" style="display:none;">
+                    R
+                </div>
+                <div class="hidden sm:block border-l border-gray-200 pl-3 min-w-0">
+                    <h1 class="font-display text-lg font-bold tracking-tight text-gray-800 truncate">Reben Petroleum</h1>
+                    <p class="text-[9px] font-medium text-gray-400 tracking-[0.15em] uppercase truncate">Operations Dashboard</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-1.5 sm:gap-2 no-print flex-shrink-0">
+                <!-- Dark mode toggle -->
+                <button onclick="toggleDarkMode()" class="text-gray-400 hover:text-gray-600 px-2.5 py-1.5 rounded-lg bg-gray-50 hover:bg-gray-100 transition border border-gray-200 text-sm" title="Toggle dark mode">
+                    <i id="darkModeIcon" class="fa-solid fa-moon"></i>
+                </button>
+                <!-- Snapshot button — hidden on mobile to keep header clean, still available on tablet/desktop -->
+                <button onclick="takeSnapshot()" class="hidden sm:inline-flex text-gray-400 hover:text-gray-600 px-2.5 py-1.5 rounded-lg bg-gray-50 hover:bg-gray-100 transition border border-gray-200 text-sm" title="Download Snapshot">
+                    <i class="fa-solid fa-camera"></i>
+                </button>
+                <div id="syncStatus" class="hidden sm:flex items-center gap-2 px-3 py-1.5 rounded-full bg-gray-50 border border-gray-200 text-xs">
+                    <span class="status-dot" id="statusDot"></span>
+                    <span id="statusText" class="font-medium text-gray-500">Connecting…</span>
+                </div>
+                <!-- Share button — hidden on mobile to keep header clean, still available on tablet/desktop -->
+                <button onclick="shareCurrentView()" class="hidden sm:inline-flex text-gray-400 hover:text-gray-600 px-2.5 py-1.5 rounded-lg bg-gray-50 hover:bg-gray-100 transition border border-gray-200 text-sm" title="Share current view">
+                    <i class="fa-solid fa-share-alt"></i>
+                </button>
+                <button id="refreshBtn" onclick="fetchGoogleSheetData()" class="sync-btn text-sm py-1.5 px-4">
+                    <i class="fa-solid fa-rotate text-xs"></i>
+                    <span class="hidden sm:inline">Sync</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- STICKY QUICK-NAV -->
+    <nav class="sticky top-[64px] z-40 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm no-print">
+        <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
+            <div class="flex items-center space-x-1 sm:space-x-2 overflow-x-auto py-2.5 no-scrollbar">
+                <a href="#section-overview" class="nav-link text-xs font-medium text-gray-500 hover:text-brand-gold px-3 py-1.5 rounded-full hover:bg-red-50 transition whitespace-nowrap">Overview</a>
+                <span class="text-gray-300 text-xs">|</span>
+                <a href="#section-stock-status" class="nav-link text-xs font-medium text-gray-500 hover:text-brand-gold px-3 py-1.5 rounded-full hover:bg-red-50 transition whitespace-nowrap">Stock Status</a>
+                <span class="text-gray-300 text-xs">|</span>
+                <a href="#section-91" class="nav-link text-xs font-medium text-gray-500 hover:text-brand-gold px-3 py-1.5 rounded-full hover:bg-red-50 transition whitespace-nowrap">91 Gasoline</a>
+                <span class="text-gray-300 text-xs">|</span>
+                <a href="#section-95" class="nav-link text-xs font-medium text-gray-500 hover:text-brand-gold px-3 py-1.5 rounded-full hover:bg-red-50 transition whitespace-nowrap">95 Gasoline</a>
+                <span class="text-gray-300 text-xs">|</span>
+                <a href="#section-diesel" class="nav-link text-xs font-medium text-gray-500 hover:text-brand-gold px-3 py-1.5 rounded-full hover:bg-red-50 transition whitespace-nowrap">Diesel</a>
+                <span class="text-gray-300 text-xs">|</span>
+                <a href="#section-comparison" class="nav-link text-xs font-medium text-gray-500 hover:text-brand-gold px-3 py-1.5 rounded-full hover:bg-red-50 transition whitespace-nowrap">Comparison</a>
+                <span class="text-gray-300 text-xs">|</span>
+                <a href="#section-charts" class="nav-link text-xs font-medium text-gray-500 hover:text-brand-gold px-3 py-1.5 rounded-full hover:bg-red-50 transition whitespace-nowrap">Charts</a>
+                <span class="text-gray-300 text-xs">|</span>
+                <a href="#section-records" class="nav-link text-xs font-medium text-gray-500 hover:text-brand-gold px-3 py-1.5 rounded-full hover:bg-red-50 transition whitespace-nowrap">Records</a>
+            </div>
+        </div>
+    </nav>
+
+    <!-- MAIN -->
+    <main id="main-content" class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 pt-6 pb-12 space-y-6">
+
+        <!-- Error Banner -->
+        <section id="errorBanner" class="hidden error-banner flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+            <div class="flex items-start gap-4">
+                <div class="w-8 h-8 rounded-full bg-red-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                    <i class="fa-solid fa-triangle-exclamation text-red-600 text-sm"></i>
+                </div>
+                <div>
+                    <h4 class="font-bold text-sm text-gray-800">Connection Error</h4>
+                    <p id="errorMessageText" class="mt-0.5 text-xs text-gray-500 max-w-xl">Unable to pull data from Google Sheet.</p>
+                </div>
+            </div>
+            <div class="flex items-center gap-2 text-xs flex-shrink-0">
+                <button onclick="fetchGoogleSheetData()" class="px-4 py-1.5 rounded-full bg-red-600 text-white font-medium">Retry</button>
+                <a href="https://docs.google.com/spreadsheets/d/1yFkjPB-j5-3-orIbm2I0JTe0i7rdJYckEZn5YFiE79Y/edit" target="_blank" class="px-4 py-1.5 rounded-full bg-gray-800 text-white font-medium">Open Sheet</a>
+            </div>
+        </section>
+
+        <!-- FILTERS -->
+        <section class="card-premium p-5 no-print">
+            <div class="hidden">
+                <input type="text" id="sheetIdInput" value="1yFkjPB-j5-3-orIbm2I0JTe0i7rdJYckEZn5YFiE79Y" />
+                <input type="text" id="tabNameInput" value="Master" />
+            </div>
+
+            <form id="filterForm" class="grid grid-cols-1 gap-4" onsubmit="event.preventDefault(); updateDashboard();">
+                <div>
+                    <label for="stationInput" class="block text-[10px] font-bold text-gray-400 uppercase tracking-[0.1em] mb-2 flex items-center gap-2">
+                        <i class="fa-solid fa-location-dot text-brand-gold text-xs"></i> Station Name
+                    </label>
+                    <div class="relative">
+                        <input type="text" id="stationInput" list="stationsList" placeholder="Search by station name…" class="premium-input pr-8" autocomplete="off" />
+                        <button type="button" onclick="clearStationSearch()" id="stationClearBtn" class="hidden absolute right-2 top-1/2 -translate-y-1/2 text-gray-300 hover:text-gray-500" title="Clear">
+                            <i class="fa-solid fa-circle-xmark text-sm"></i>
+                        </button>
+                        <datalist id="stationsList"></datalist>
+                    </div>
+                    <div id="recentStationsWrap" class="hidden mt-2 flex items-center flex-wrap gap-1.5">
+                        <span class="text-[10px] text-gray-400 font-semibold mr-0.5"><i class="fa-solid fa-clock-rotate-left mr-1"></i>Recent:</span>
+                        <div id="recentStationsContainer" class="flex flex-wrap gap-1.5"></div>
+                        <button type="button" onclick="clearRecentStations()" class="text-[10px] text-gray-400 hover:text-red-500 ml-1">Clear</button>
+                    </div>
+                </div>
+            </form>
+
+            <div class="pt-4 mt-4 border-t border-gray-100">
+                <div class="flex items-center justify-between mb-3">
+                    <span class="text-[10px] font-bold text-gray-400 uppercase tracking-[0.1em] flex items-center gap-2">
+                        <i class="fa-regular fa-calendar text-brand-gold"></i> Active Months
+                        <span class="text-brand-gold font-bold ml-1" id="activeCount">0</span>
+                    </span>
+                    <div class="flex items-center gap-2">
+                        <button onclick="toggleAllMonths(true)" class="text-xs text-brand-gold font-semibold">Select All</button>
+                        <button onclick="toggleAllMonths(false)" class="text-xs text-gray-400 font-semibold">Clear</button>
+                    </div>
+                </div>
+                <div id="monthTagsContainer" class="flex flex-wrap gap-2"></div>
+            </div>
+
+            <div class="mt-4 pt-4 border-t border-gray-100 flex items-center gap-4">
+                <label class="inline-flex items-center cursor-pointer">
+                    <input type="checkbox" id="forecastToggle" class="form-checkbox h-3.5 w-3.5 text-brand-gold rounded border-gray-300 focus:ring-brand-gold" />
+                    <span class="ml-2 text-xs font-medium text-gray-600">Show Forecast (2 months)</span>
+                </label>
+                <span class="text-[10px] text-gray-400">Linear regression</span>
+            </div>
+        </section>
+
+        <!-- ===== SECTION: STOCK STATUS OVERVIEW ===== -->
+        <section id="section-stock-status">
+            <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2.5 sm:gap-2 mb-3">
+                <div class="fuel-row-label flex flex-wrap items-center gap-x-2 gap-y-0.5">
+                    <span class="badge-dot" style="background:#86a789;"></span>
+                    Stock Status Overview
+                    <span class="text-[10px] font-normal text-gray-400" id="stockStatusTimestamp">Updated: —</span>
+                </div>
+                <div class="grid grid-cols-2 gap-1.5 sm:flex sm:items-center sm:gap-2 no-print">
+                    <button onclick="toggleThresholdPanel()" class="month-tag w-full sm:w-auto justify-center text-[11px] sm:text-xs px-2 sm:px-3 py-1.5 sm:py-1 bg-gray-100 border-gray-200 hover:bg-gray-200 text-gray-600">
+                        <i class="fa-solid fa-sliders"></i> Thresholds
+                    </button>
+                    <button onclick="shareStockStatusWhatsApp()" class="month-tag w-full sm:w-auto justify-center text-[11px] sm:text-xs px-2 sm:px-3 py-1.5 sm:py-1 bg-green-50 border-green-200 hover:bg-green-100 text-green-700">
+                        <i class="fa-brands fa-whatsapp"></i> Share
+                    </button>
+                    <button onclick="exportStockStatusExcel()" class="month-tag w-full sm:w-auto justify-center text-[11px] sm:text-xs px-2 sm:px-3 py-1.5 sm:py-1 bg-emerald-50 border-emerald-200 hover:bg-emerald-100 text-emerald-700">
+                        <i class="fa-solid fa-file-excel"></i> Excel
+                    </button>
+                    <button onclick="exportStockStatusPDF()" class="month-tag w-full sm:w-auto justify-center text-[11px] sm:text-xs px-2 sm:px-3 py-1.5 sm:py-1 bg-blue-50 border-blue-200 hover:bg-blue-100 text-blue-700">
+                        <i class="fa-solid fa-file-pdf"></i> PDF
+                    </button>
+                </div>
+            </div>
+
+            <!-- Per-station low-stock threshold settings -->
+            <div id="thresholdPanel" class="hidden card-premium p-4 mb-4 no-print">
+                <div class="flex items-center justify-between mb-3">
+                    <div>
+                        <p class="text-xs font-bold text-gray-700">Per-Station Low-Stock Thresholds</p>
+                        <p class="text-[10px] text-gray-400">Leave blank to use the default (2,000 LTR). Changes save automatically and apply immediately.</p>
+                    </div>
+                    <button onclick="resetAllThresholds()" class="text-[11px] text-red-500 hover:text-red-600 font-semibold flex-shrink-0 flex items-center gap-1">
+                        <i class="fa-solid fa-rotate-left"></i> Reset All
+                    </button>
+                </div>
+                <div id="thresholdPanelBody" class="max-h-[280px] overflow-y-auto pr-1"></div>
+            </div>
+
+            <!-- KPI Cards -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-4">
+                <div class="card-premium kpi-card relative overflow-hidden border-l-[3px] border-green-400 bg-green-50/40">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="kpi-label">91 Cont. Stock</p>
+                            <h3 id="kpi91ContStock" class="kpi-value text-green-700 mt-0.5">0 LTR</h3>
+                        </div>
+                        <div class="kpi-icon-sm bg-white/70"><i class="fa-solid fa-boxes-stacked text-green-500 text-xs"></i></div>
+                    </div>
+                    <div class="gold-line"></div>
+                </div>
+                <div class="card-premium kpi-card relative overflow-hidden border-l-[3px] border-pink-400 bg-pink-50/40">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="kpi-label">95 Cont. Stock</p>
+                            <h3 id="kpi95ContStock" class="kpi-value text-pink-700 mt-0.5">0 LTR</h3>
+                        </div>
+                        <div class="kpi-icon-sm bg-white/70"><i class="fa-solid fa-boxes-stacked text-pink-500 text-xs"></i></div>
+                    </div>
+                    <div class="gold-line"></div>
+                </div>
+                <div class="card-premium kpi-card relative overflow-hidden border-l-[3px] border-amber-400 bg-amber-50/40">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="kpi-label">Diesel Cont. Stock</p>
+                            <h3 id="kpiDieselContStock" class="kpi-value text-amber-700 mt-0.5">0 LTR</h3>
+                        </div>
+                        <div class="kpi-icon-sm bg-white/70"><i class="fa-solid fa-boxes-stacked text-amber-500 text-xs"></i></div>
+                    </div>
+                    <div class="gold-line"></div>
+                </div>
+                <div id="kpiStatusCard" class="card-premium kpi-card relative overflow-hidden border-l-[3px] border-cyan-400 bg-cyan-50/40">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="kpi-label">Current Status</p>
+                            <h3 id="kpiStatus" class="kpi-value text-cyan-700 mt-0.5">—</h3>
+                        </div>
+                        <div class="kpi-icon-sm bg-white/70"><i class="fa-solid fa-flag text-cyan-500 text-xs"></i></div>
+                    </div>
+                    <div class="gold-line"></div>
+                </div>
+            </div>
+
+            <!-- Full Table -->
+            <div class="card-premium overflow-hidden">
+                <div class="px-4 py-2.5 border-b border-gray-100 flex justify-between items-center bg-gray-50/60">
+                    <p class="text-xs font-medium text-gray-500" id="stockStatusCount">Showing 0 stations</p>
+                </div>
+                <!-- Desktop / tablet table -->
+                <div class="status-table-wrap hidden sm:block">
+                    <table class="status-table" id="stockStatusTable">
+                        <thead>
+                            <tr>
+                                <th style="min-width:44px; text-align:center;">#</th>
+                                <th style="min-width:140px;">Station Name</th>
+                                <th style="min-width:110px;">91 Cont. Stock</th>
+                                <th style="min-width:110px;">95 Cont. Stock</th>
+                                <th style="min-width:110px;">Diesel Cont. Stock</th>
+                                <th style="min-width:110px;">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="stockStatusBody">
+                            <tr>
+                                <td colspan="6" class="text-center text-gray-400 py-8">No data available. Please sync the sheet.</td>
+                            </tr>
+                        </tbody>
+                    </table>
+                </div>
+                <!-- Mobile card view — no horizontal drag needed -->
+                <div id="stockStatusMobileCards" class="sm:hidden divide-y divide-gray-100 max-h-[440px] overflow-y-auto">
+                    <p class="text-center text-gray-400 py-8 text-sm">No data available. Please sync the sheet.</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== SECTION: OVERVIEW METRICS ===== -->
+        <section id="section-overview" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <div class="card-premium kpi-card relative overflow-hidden">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="kpi-label">Total Sales Volume</p>
+                        <h3 id="kpiTotalSales" class="kpi-value text-gray-800 mt-0.5">0 LTR</h3>
+                    </div>
+                    <div class="kpi-icon"><i class="fa-solid fa-gas-pump text-base"></i></div>
+                </div>
+                <div class="gold-line"></div>
+            </div>
+            <div class="card-premium kpi-card relative overflow-hidden">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="kpi-label">Total Net Supply</p>
+                        <h3 id="kpiTotalNetSupply" class="kpi-value text-emerald-600 mt-0.5">0 LTR</h3>
+                    </div>
+                    <div class="kpi-icon"><i class="fa-solid fa-truck-field text-base"></i></div>
+                </div>
+                <div class="gold-line"></div>
+            </div>
+            <div class="card-premium kpi-card relative overflow-hidden">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="kpi-label">Total Initial Stock</p>
+                        <h3 id="kpiTotalInitStock" class="kpi-value text-gray-800 mt-0.5">0 LTR</h3>
+                    </div>
+                    <div class="kpi-icon"><i class="fa-solid fa-boxes-stacked text-base"></i></div>
+                </div>
+                <div class="gold-line"></div>
+            </div>
+            <div class="card-premium kpi-card relative overflow-hidden">
+                <div class="flex justify-between items-start">
+                    <div>
+                        <p class="kpi-label">Monthly Avg Volume</p>
+                        <h3 id="kpiAvgSales" class="kpi-value text-gray-800 mt-0.5">0 LTR</h3>
+                    </div>
+                    <div class="kpi-icon"><i class="fa-solid fa-chart-line text-base"></i></div>
+                </div>
+                <div class="gold-line"></div>
+            </div>
+        </section>
+
+        <!-- ===== SECTION: 91 GASOLINE METRICS ===== -->
+        <section id="section-91">
+            <div class="fuel-row-label mb-2.5">
+                <span class="badge-dot" style="background:#22c55e;"></span>
+                91 Gasoline Metrics
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                <div class="card-premium kpi-card product-card relative overflow-hidden border-l-[3px] border-emerald-400">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="kpi-label">Sales Volume</p>
+                            <h3 id="kpi91Sales" class="kpi-value text-emerald-600 mt-0.5">0 LTR</h3>
+                        </div>
+                        <div class="kpi-icon-sm"><i class="fa-solid fa-gas-pump text-emerald-500 text-xs"></i></div>
+                    </div>
+                    <div class="gold-line"></div>
+                </div>
+                <div class="card-premium kpi-card product-card relative overflow-hidden border-l-[3px] border-emerald-400">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="kpi-label">Net Supply</p>
+                            <h3 id="kpi91NetSupply" class="kpi-value text-emerald-600 mt-0.5">0 LTR</h3>
+                        </div>
+                        <div class="kpi-icon-sm"><i class="fa-solid fa-truck-field text-emerald-500 text-xs"></i></div>
+                    </div>
+                    <div class="gold-line"></div>
+                </div>
+                <div class="card-premium kpi-card product-card relative overflow-hidden border-l-[3px] border-emerald-400">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="kpi-label">Initial Stock</p>
+                            <h3 id="kpi91InitStock" class="kpi-value text-gray-700 mt-0.5">0 LTR</h3>
+                        </div>
+                        <div class="kpi-icon-sm"><i class="fa-solid fa-boxes-stacked text-emerald-500 text-xs"></i></div>
+                    </div>
+                    <div class="gold-line"></div>
+                </div>
+                <div class="card-premium kpi-card product-card relative overflow-hidden border-l-[3px] border-emerald-400">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="kpi-label">Supply Count</p>
+                            <h3 id="kpi91Count" class="kpi-value text-gray-700 mt-0.5">0</h3>
+                        </div>
+                        <div class="kpi-icon-sm"><i class="fa-solid fa-hashtag text-emerald-500 text-xs"></i></div>
+                    </div>
+                    <div class="gold-line"></div>
+                </div>
+                <div class="card-premium kpi-card product-card relative overflow-hidden border-l-[3px] border-emerald-400">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="kpi-label">Total Aramco</p>
+                            <h3 id="kpi91Aramco" class="kpi-value text-emerald-600 mt-0.5">0 LTR</h3>
+                        </div>
+                        <div class="kpi-icon-sm"><i class="fa-solid fa-oil-well text-emerald-500 text-xs"></i></div>
+                    </div>
+                    <div class="gold-line"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== SECTION: 95 GASOLINE METRICS ===== -->
+        <section id="section-95">
+            <div class="fuel-row-label mb-2.5">
+                <span class="badge-dot" style="background:#ef4444;"></span>
+                95 Gasoline Metrics
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                <div class="card-premium kpi-card product-card relative overflow-hidden border-l-[3px] border-red-400">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="kpi-label">Sales Volume</p>
+                            <h3 id="kpi95Sales" class="kpi-value text-red-600 mt-0.5">0 LTR</h3>
+                        </div>
+                        <div class="kpi-icon-sm"><i class="fa-solid fa-gas-pump text-red-500 text-xs"></i></div>
+                    </div>
+                    <div class="gold-line"></div>
+                </div>
+                <div class="card-premium kpi-card product-card relative overflow-hidden border-l-[3px] border-red-400">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="kpi-label">Net Supply</p>
+                            <h3 id="kpi95NetSupply" class="kpi-value text-red-600 mt-0.5">0 LTR</h3>
+                        </div>
+                        <div class="kpi-icon-sm"><i class="fa-solid fa-truck-field text-red-500 text-xs"></i></div>
+                    </div>
+                    <div class="gold-line"></div>
+                </div>
+                <div class="card-premium kpi-card product-card relative overflow-hidden border-l-[3px] border-red-400">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="kpi-label">Initial Stock</p>
+                            <h3 id="kpi95InitStock" class="kpi-value text-gray-700 mt-0.5">0 LTR</h3>
+                        </div>
+                        <div class="kpi-icon-sm"><i class="fa-solid fa-boxes-stacked text-red-500 text-xs"></i></div>
+                    </div>
+                    <div class="gold-line"></div>
+                </div>
+                <div class="card-premium kpi-card product-card relative overflow-hidden border-l-[3px] border-red-400">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="kpi-label">Supply Count</p>
+                            <h3 id="kpi95Count" class="kpi-value text-gray-700 mt-0.5">0</h3>
+                        </div>
+                        <div class="kpi-icon-sm"><i class="fa-solid fa-hashtag text-red-500 text-xs"></i></div>
+                    </div>
+                    <div class="gold-line"></div>
+                </div>
+                <div class="card-premium kpi-card product-card relative overflow-hidden border-l-[3px] border-red-400">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="kpi-label">Total Aramco</p>
+                            <h3 id="kpi95Aramco" class="kpi-value text-red-600 mt-0.5">0 LTR</h3>
+                        </div>
+                        <div class="kpi-icon-sm"><i class="fa-solid fa-oil-well text-red-500 text-xs"></i></div>
+                    </div>
+                    <div class="gold-line"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== SECTION: DIESEL METRICS ===== -->
+        <section id="section-diesel">
+            <div class="fuel-row-label mb-2.5">
+                <span class="badge-dot" style="background:#f59e0b;"></span>
+                Diesel Metrics
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                <div class="card-premium kpi-card product-card relative overflow-hidden border-l-[3px] border-amber-400">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="kpi-label">Sales Volume</p>
+                            <h3 id="kpiDieselSales" class="kpi-value text-amber-600 mt-0.5">0 LTR</h3>
+                        </div>
+                        <div class="kpi-icon-sm"><i class="fa-solid fa-gas-pump text-amber-500 text-xs"></i></div>
+                    </div>
+                    <div class="gold-line"></div>
+                </div>
+                <div class="card-premium kpi-card product-card relative overflow-hidden border-l-[3px] border-amber-400">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="kpi-label">Net Supply</p>
+                            <h3 id="kpiDieselNetSupply" class="kpi-value text-amber-600 mt-0.5">0 LTR</h3>
+                        </div>
+                        <div class="kpi-icon-sm"><i class="fa-solid fa-truck-field text-amber-500 text-xs"></i></div>
+                    </div>
+                    <div class="gold-line"></div>
+                </div>
+                <div class="card-premium kpi-card product-card relative overflow-hidden border-l-[3px] border-amber-400">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="kpi-label">Initial Stock</p>
+                            <h3 id="kpiDieselInitStock" class="kpi-value text-gray-700 mt-0.5">0 LTR</h3>
+                        </div>
+                        <div class="kpi-icon-sm"><i class="fa-solid fa-boxes-stacked text-amber-500 text-xs"></i></div>
+                    </div>
+                    <div class="gold-line"></div>
+                </div>
+                <div class="card-premium kpi-card product-card relative overflow-hidden border-l-[3px] border-amber-400">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="kpi-label">Supply Count</p>
+                            <h3 id="kpiDieselCount" class="kpi-value text-gray-700 mt-0.5">0</h3>
+                        </div>
+                        <div class="kpi-icon-sm"><i class="fa-solid fa-hashtag text-amber-500 text-xs"></i></div>
+                    </div>
+                    <div class="gold-line"></div>
+                </div>
+                <div class="card-premium kpi-card product-card relative overflow-hidden border-l-[3px] border-amber-400">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="kpi-label">Total Aramco</p>
+                            <h3 id="kpiDieselAramco" class="kpi-value text-amber-600 mt-0.5">0 LTR</h3>
+                        </div>
+                        <div class="kpi-icon-sm"><i class="fa-solid fa-oil-well text-amber-500 text-xs"></i></div>
+                    </div>
+                    <div class="gold-line"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== SECTION: ALL FUELS SUMMARY ===== -->
+        <section>
+            <div class="fuel-row-label mb-2.5">
+                <span class="badge-dot" style="background:#3b82f6;"></span>
+                All Fuels Summary
+            </div>
+            <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+                <div class="card-premium kpi-card product-card relative overflow-hidden border-l-[3px] border-blue-400">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="kpi-label">Total Sales</p>
+                            <h3 id="kpiSummarySales" class="kpi-value text-blue-600 mt-0.5">0 LTR</h3>
+                        </div>
+                        <div class="kpi-icon-sm"><i class="fa-solid fa-chart-pie text-blue-500 text-xs"></i></div>
+                    </div>
+                    <div class="gold-line"></div>
+                </div>
+                <div class="card-premium kpi-card product-card relative overflow-hidden border-l-[3px] border-blue-400">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="kpi-label">Total Net Supply</p>
+                            <h3 id="kpiSummaryNetSupply" class="kpi-value text-blue-600 mt-0.5">0 LTR</h3>
+                        </div>
+                        <div class="kpi-icon-sm"><i class="fa-solid fa-truck-fast text-blue-500 text-xs"></i></div>
+                    </div>
+                    <div class="gold-line"></div>
+                </div>
+                <div class="card-premium kpi-card product-card relative overflow-hidden border-l-[3px] border-blue-400">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="kpi-label">Total Init Stock</p>
+                            <h3 id="kpiSummaryInitStock" class="kpi-value text-gray-700 mt-0.5">0 LTR</h3>
+                        </div>
+                        <div class="kpi-icon-sm"><i class="fa-solid fa-warehouse text-blue-500 text-xs"></i></div>
+                    </div>
+                    <div class="gold-line"></div>
+                </div>
+                <div class="card-premium kpi-card product-card relative overflow-hidden border-l-[3px] border-blue-400">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="kpi-label">Supply Count</p>
+                            <h3 id="kpiSummaryCount" class="kpi-value text-gray-700 mt-0.5">0</h3>
+                        </div>
+                        <div class="kpi-icon-sm"><i class="fa-solid fa-calculator text-blue-500 text-xs"></i></div>
+                    </div>
+                    <div class="gold-line"></div>
+                </div>
+                <div class="card-premium kpi-card product-card relative overflow-hidden border-l-[3px] border-blue-400">
+                    <div class="flex justify-between items-start">
+                        <div>
+                            <p class="kpi-label">Total Aramco</p>
+                            <h3 id="kpiSummaryAramco" class="kpi-value text-blue-600 mt-0.5">0 LTR</h3>
+                        </div>
+                        <div class="kpi-icon-sm"><i class="fa-solid fa-oil-well text-blue-500 text-xs"></i></div>
+                    </div>
+                    <div class="gold-line"></div>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== SECTION: MULTI-STATION COMPARISON ===== -->
+        <section id="section-comparison" class="card-premium p-5 no-print">
+            <div class="flex items-center justify-between mb-3 flex-wrap gap-3">
+                <div>
+                    <h2 class="text-sm font-bold text-gray-800 flex items-center gap-2">
+                        <i class="fa-solid fa-code-compare text-brand-gold text-xs"></i> Multi-Station Comparison
+                    </h2>
+                    <p class="text-[11px] text-gray-400 font-medium">Compare volume &amp; net supply across stations</p>
+                </div>
+                <button id="comparisonToggleBtn" onclick="toggleComparisonMode()" class="month-tag">
+                    <i class="fa-regular fa-square" id="comparisonToggleIcon"></i>
+                    <span id="comparisonToggleLabel">Enable Comparison</span>
+                </button>
+            </div>
+            <div id="comparisonPanel" class="hidden mt-4 pt-4 border-t border-gray-100">
+                <div id="comparisonStationList" class="flex flex-wrap gap-2 mb-4"></div>
+                <p id="comparisonEmptyMsg" class="text-xs text-gray-400 text-center py-8 hidden">Select stations above to compare.</p>
+                <div class="relative h-[300px]" id="comparisonChartWrap">
+                    <canvas id="stationComparisonChart"></canvas>
+                </div>
+            </div>
+        </section>
+
+        <!-- ===== SECTION: CHARTS ===== -->
+        <div id="section-charts">
+            <section class="grid grid-cols-1 lg:grid-cols-2 gap-5">
+                <div class="card-premium p-5">
+                    <h2 class="text-sm font-bold text-gray-800 mb-0.5">Cumulative Fuel Sales Share</h2>
+                    <p class="text-[11px] text-gray-400 mb-3">Breakdown by fuel grade – click to filter</p>
+                    <div class="chart-container">
+                        <canvas id="fuelShareChart"></canvas>
+                    </div>
+                </div>
+                <div class="card-premium p-5">
+                    <h2 class="text-sm font-bold text-gray-800 mb-0.5">Sales Volume vs Net Supply Trend</h2>
+                    <p class="text-[11px] text-gray-400 mb-3">Grade sales vs total net supply line</p>
+                    <div class="chart-container">
+                        <canvas id="monthlyGradeBarChart"></canvas>
+                    </div>
+                </div>
+                <div class="card-premium p-5">
+                    <h2 class="text-sm font-bold text-gray-800 mb-0.5">Monthly Net Supply Breakdown</h2>
+                    <p class="text-[11px] text-gray-400 mb-3">91 · 95 · Diesel Net Supply</p>
+                    <div class="chart-container">
+                        <canvas id="monthlyExpenseBarChart"></canvas>
+                    </div>
+                </div>
+                <div class="card-premium p-5">
+                    <h2 class="text-sm font-bold text-gray-800 mb-0.5">Total Sales vs Supply Trend</h2>
+                    <p class="text-[11px] text-gray-400 mb-3">Total volume &amp; total supply comparison</p>
+                    <div class="chart-container">
+                        <canvas id="monthlyTrendChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <section class="grid grid-cols-1 gap-5 mt-5">
+                <div class="card-premium p-5">
+                    <h2 class="text-sm font-bold text-gray-800 mb-0.5">Monthly Stock, Sales & Loss Analysis (All Fuels)</h2>
+                    <p class="text-[11px] text-gray-400 mb-3">Click a bar to filter table – Initial+Aramco · Net Supply · Sales (bars) & Loss (line)</p>
+                    <div class="chart-container" style="height:320px;">
+                        <canvas id="monthlyLossChart"></canvas>
+                    </div>
+                </div>
+            </section>
+
+            <section class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5 mt-5">
+                <div class="card-premium p-5">
+                    <h2 class="text-sm font-bold text-emerald-600 mb-0.5">91 Gasoline Analysis</h2>
+                    <p class="text-[11px] text-gray-400 mb-3">Init+Aramco · Net Supply · Sales & Loss</p>
+                    <div class="chart-container" style="height:240px;">
+                        <canvas id="product91Chart"></canvas>
+                    </div>
+                </div>
+                <div class="card-premium p-5">
+                    <h2 class="text-sm font-bold text-red-600 mb-0.5">95 Gasoline Analysis</h2>
+                    <p class="text-[11px] text-gray-400 mb-3">Init+Aramco · Net Supply · Sales & Loss</p>
+                    <div class="chart-container" style="height:240px;">
+                        <canvas id="product95Chart"></canvas>
+                    </div>
+                </div>
+                <div class="card-premium p-5">
+                    <h2 class="text-sm font-bold text-amber-600 mb-0.5">Diesel Analysis</h2>
+                    <p class="text-[11px] text-gray-400 mb-3">Init+Aramco · Net Supply · Sales & Loss</p>
+                    <div class="chart-container" style="height:240px;">
+                        <canvas id="productDieselChart"></canvas>
+                    </div>
+                </div>
+            </section>
+        </div>
+
+        <!-- ===== SECTION: TABLE RECORDS ===== -->
+        <section id="section-records" class="card-premium overflow-hidden">
+            <div class="px-5 py-3 border-b border-gray-100 flex flex-wrap justify-between items-center gap-2 bg-gray-50/60">
+                <div>
+                    <h2 class="text-sm font-bold text-gray-800">Aggregated Master Station Records</h2>
+                    <p class="text-[11px] text-gray-400 font-medium" id="tableRecordCount">Showing 0 entries</p>
+                </div>
+                <div class="flex flex-wrap items-center gap-1.5 sm:gap-2 no-print">
+                    <button onclick="exportToExcel()" class="px-2.5 sm:px-4 py-1.5 bg-emerald-600 text-white text-[11px] sm:text-xs font-bold rounded-lg hover:bg-emerald-700 transition shadow-sm flex items-center gap-1.5 sm:gap-2">
+                        <i class="fa-solid fa-file-excel"></i> Export
+                    </button>
+                    <div class="flex items-center rounded-lg border border-gray-200 overflow-hidden text-[11px] font-bold" title="Paper size for the PDF export">
+                        <button type="button" onclick="setRecordsPaperSize('A4')" id="paperSizeA4Btn" class="px-2 sm:px-2.5 py-1.5 bg-gray-800 text-white">A4</button>
+                        <button type="button" onclick="setRecordsPaperSize('A3')" id="paperSizeA3Btn" class="px-2 sm:px-2.5 py-1.5 bg-gray-100 text-gray-500">A3</button>
+                    </div>
+                    <button onclick="exportRecordsPDF()" class="px-2.5 sm:px-4 py-1.5 bg-blue-600 text-white text-[11px] sm:text-xs font-bold rounded-lg hover:bg-blue-700 transition shadow-sm flex items-center gap-1.5 sm:gap-2">
+                        <i class="fa-solid fa-file-pdf"></i> PDF
+                    </button>
+                    <button onclick="clearMonthFilter()" class="px-2.5 sm:px-4 py-1.5 bg-gray-200 text-gray-700 text-[11px] sm:text-xs font-bold rounded-lg hover:bg-gray-300 transition flex items-center gap-1.5 sm:gap-2">
+                        <i class="fa-solid fa-times-circle"></i> Clear
+                    </button>
+                </div>
+            </div>
+
+            <div class="table-scroll hidden sm:block" id="tableScrollWrapper">
+                <table class="premium-table" id="mainTable">
+                    <thead>
+                        <tr>
+                            <th rowspan="2" class="text-center cursor-pointer hover:bg-gray-100 sticky-col sl-no" onclick="sortTable('slNo')">
+                                Sl No. <i class="fa-solid fa-sort sort-icon" data-key="slNo"></i>
+                            </th>
+                            <th rowspan="2" class="cursor-pointer hover:bg-gray-100 sticky-col region" onclick="sortTable('region')">
+                                Region <i class="fa-solid fa-sort sort-icon" data-key="region"></i>
+                            </th>
+                            <th rowspan="2" class="cursor-pointer hover:bg-gray-100 sticky-col month" onclick="sortTable('month')">
+                                Months <i class="fa-solid fa-sort sort-icon" data-key="month"></i>
+                            </th>
+                            <th rowspan="2" class="cursor-pointer hover:bg-gray-100 sticky-col station" onclick="sortTable('station')">
+                                Station <i class="fa-solid fa-sort sort-icon" data-key="station"></i>
+                            </th>
+
+                            <th colspan="5" class="text-center bg-emerald-50/60 text-emerald-800 border-b border-emerald-200 font-bold text-[9px]">91 GASOLINE</th>
+                            <th colspan="5" class="text-center bg-red-50/60 text-red-800 border-b border-red-200 font-bold text-[9px]">95 GASOLINE</th>
+                            <th colspan="5" class="text-center bg-amber-50/60 text-amber-800 border-b border-amber-200 font-bold text-[9px]">DIESEL</th>
+                        </tr>
+                        <tr>
+                            <th class="text-right cursor-pointer hover:bg-emerald-100 text-emerald-700" onclick="sortTable('s91_sales')">Sales <i class="fa-solid fa-sort sort-icon" data-key="s91_sales"></i></th>
+                            <th class="text-right cursor-pointer hover:bg-emerald-100 text-emerald-700" onclick="sortTable('s91_init')">Init <i class="fa-solid fa-sort sort-icon" data-key="s91_init"></i></th>
+                            <th class="text-right cursor-pointer hover:bg-emerald-100 text-emerald-700" onclick="sortTable('s91_net')">Net <i class="fa-solid fa-sort sort-icon" data-key="s91_net"></i></th>
+                            <th class="text-right cursor-pointer hover:bg-emerald-100 text-emerald-700" onclick="sortTable('s91_aramco')">Aramco <i class="fa-solid fa-sort sort-icon" data-key="s91_aramco"></i></th>
+                            <th class="text-right cursor-pointer hover:bg-emerald-100 text-emerald-700" onclick="sortTable('s91_count')">Count <i class="fa-solid fa-sort sort-icon" data-key="s91_count"></i></th>
+
+                            <th class="text-right cursor-pointer hover:bg-red-100 text-red-700" onclick="sortTable('s95_sales')">Sales <i class="fa-solid fa-sort sort-icon" data-key="s95_sales"></i></th>
+                            <th class="text-right cursor-pointer hover:bg-red-100 text-red-700" onclick="sortTable('s95_init')">Init <i class="fa-solid fa-sort sort-icon" data-key="s95_init"></i></th>
+                            <th class="text-right cursor-pointer hover:bg-red-100 text-red-700" onclick="sortTable('s95_net')">Net <i class="fa-solid fa-sort sort-icon" data-key="s95_net"></i></th>
+                            <th class="text-right cursor-pointer hover:bg-red-100 text-red-700" onclick="sortTable('s95_aramco')">Aramco <i class="fa-solid fa-sort sort-icon" data-key="s95_aramco"></i></th>
+                            <th class="text-right cursor-pointer hover:bg-red-100 text-red-700" onclick="sortTable('s95_count')">Count <i class="fa-solid fa-sort sort-icon" data-key="s95_count"></i></th>
+
+                            <th class="text-right cursor-pointer hover:bg-amber-100 text-amber-700" onclick="sortTable('diesel_sales')">Sales <i class="fa-solid fa-sort sort-icon" data-key="diesel_sales"></i></th>
+                            <th class="text-right cursor-pointer hover:bg-amber-100 text-amber-700" onclick="sortTable('diesel_init')">Init <i class="fa-solid fa-sort sort-icon" data-key="diesel_init"></i></th>
+                            <th class="text-right cursor-pointer hover:bg-amber-100 text-amber-700" onclick="sortTable('diesel_net')">Net <i class="fa-solid fa-sort sort-icon" data-key="diesel_net"></i></th>
+                            <th class="text-right cursor-pointer hover:bg-amber-100 text-amber-700" onclick="sortTable('diesel_aramco')">Aramco <i class="fa-solid fa-sort sort-icon" data-key="diesel_aramco"></i></th>
+                            <th class="text-right cursor-pointer hover:bg-amber-100 text-amber-700" onclick="sortTable('diesel_count')">Count <i class="fa-solid fa-sort sort-icon" data-key="diesel_count"></i></th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="divide-y divide-gray-100 bg-white"></tbody>
+                    <tfoot id="tableFoot" class="border-t-2 border-gray-200 bg-gray-50/80 font-bold"></tfoot>
+                </table>
+            </div>
+
+            <!-- Pagination Controls -->
+            <div id="paginationContainer" class="pagination-controls no-print"></div>
+
+            <div id="mobileRecordCards" class="sm:hidden divide-y divide-gray-100 max-h-[520px] overflow-y-auto"></div>
+        </section>
+
+    </main>
+
+    <!-- Dedicated printable report for the Stock Status Overview export.
+         Hidden on screen; shown exclusively while printing via the
+         body.printing-report class toggled from exportStockStatusPDF(). -->
+    <div id="reportPrintRoot"></div>
+
+    <script>
+        const MONTHS_ORDER = [
+            "January", "February", "March", "April", "May", "June",
+            "July", "August", "September", "October", "November", "December"
+        ];
+
+        let rawDataset = [];
+        let selectedMonths = [];
+        let fuelShareChart = null;
+        let monthlyGradeBarChart = null;
+        let monthlyExpenseBarChart = null;
+        let monthlyTrendChart = null;
+        let stationComparisonChart = null;
+        let monthlyLossChart = null;
+        let product91Chart = null;
+        let product95Chart = null;
+        let productDieselChart = null;
+
+        let sortKey = null;
+        let sortDir = 'asc';
+        let lastFilteredData = [];
+        let isLoading = false; // for skeleton loading
+
+        let comparisonMode = false;
+        let selectedComparisonStations = [];
+        let forecastEnabled = false;
+
+        // Pagination state
+        let currentPage = 1;
+        const pageSize = 20;
+
+        // ===== DARK MODE =====
+        function setChartDefaults(isDark) {
+            Chart.defaults.color = isDark ? '#94a3b8' : '#4b5563';
+            Chart.defaults.borderColor = isDark ? '#243244' : '#e5e7eb';
+        }
+
+        function applyChartTheme(isDark) {
+            setChartDefaults(isDark);
+            [fuelShareChart, monthlyGradeBarChart, monthlyExpenseBarChart, monthlyTrendChart,
+                stationComparisonChart, monthlyLossChart, product91Chart, product95Chart, productDieselChart
+            ].forEach(c => { if (c) c.update(); });
+        }
+
+        function applyTheme(isDark, silent) {
+            document.documentElement.classList.toggle('dark', isDark);
+            const icon = document.getElementById('darkModeIcon');
+            if (icon) icon.className = isDark ? 'fa-solid fa-sun' : 'fa-solid fa-moon';
+            try {
+                localStorage.setItem('reben_theme', isDark ? 'dark' : 'light');
+            } catch (e) { /* storage unavailable — ignore */ }
+            if (silent) {
+                setChartDefaults(isDark);
+            } else {
+                applyChartTheme(isDark);
+            }
+        }
+
+
+        function toggleDarkMode() {
+            applyTheme(!document.documentElement.classList.contains('dark'));
+        }
+
+        let savedTheme = null;
+        try {
+            savedTheme = localStorage.getItem('reben_theme');
+        } catch (e) { /* storage unavailable — ignore */ }
+        const isDarkInitial = savedTheme === 'dark' || (!savedTheme && window.matchMedia &&
+            window.matchMedia('(prefers-color-scheme: dark)').matches);
+        applyTheme(isDarkInitial, true);
+
+        const COLOR_91 = '#22c55e';
+        const COLOR_95 = '#ef4444';
+        const COLOR_DIESEL = '#f59e0b';
+        const COLOR_SUPPLY_LINE = '#3b82f6';
+        const COLOR_VOLUME = '#10b981';
+        const COLOR_LOSS = '#ef4444';
+        const LOW_STOCK_THRESHOLD = 2000;
+
+        // ===== PER-STATION THRESHOLD CUSTOMIZATION =====
+        let stationThresholds = {};
+        try {
+            stationThresholds = JSON.parse(localStorage.getItem('reben_station_thresholds') || '{}');
+        } catch (e) {
+            stationThresholds = {};
+        }
+
+        function getStationThreshold(station) {
+            const v = stationThresholds[station];
+            return (v !== undefined && v !== null && v !== '' && !isNaN(v) && Number(v) > 0) ? Number(v) :
+                LOW_STOCK_THRESHOLD;
+        }
+
+        function saveStationThresholds() {
+            try {
+                localStorage.setItem('reben_station_thresholds', JSON.stringify(stationThresholds));
+            } catch (e) { /* storage unavailable — ignore */ }
+        }
+
+        function updateStationThreshold(station, value) {
+            if (value === '' || value === null || isNaN(value)) {
+                delete stationThresholds[station];
+            } else {
+                stationThresholds[station] = value;
+            }
+            saveStationThresholds();
+            renderStockStatusTable(lastFilteredData);
+        }
+
+        function resetAllThresholds() {
+            stationThresholds = {};
+            saveStationThresholds();
+            renderThresholdPanel();
+            renderStockStatusTable(lastFilteredData);
+            showToast('All thresholds reset to default (2000 LTR).');
+        }
+
+        function toggleThresholdPanel() {
+            const panel = document.getElementById('thresholdPanel');
+            const willShow = panel.classList.contains('hidden');
+            panel.classList.toggle('hidden');
+            if (willShow) renderThresholdPanel();
+        }
+
+        function renderThresholdPanel() {
+            const container = document.getElementById('thresholdPanelBody');
+            if (!container) return;
+            const stations = [...new Set(rawDataset.map(r => r.station))].sort((a, b) => a.localeCompare(b));
+            if (stations.length === 0) {
+                container.innerHTML =
+                    `<p class="text-xs text-gray-400 text-center py-4">No stations loaded yet.</p>`;
+                return;
+            }
+            container.innerHTML = stations.map(st => {
+                const custom = stationThresholds[st] !== undefined ? stationThresholds[st] : '';
+                const safeAttr = st.replace(/'/g, "\\'").replace(/"/g, '&quot;');
+                return `
+                    <div class="flex items-center justify-between gap-3 py-1.5 border-b border-gray-100 last:border-0">
+                        <span class="text-xs text-gray-700 font-medium truncate">${st}</span>
+                        <div class="flex items-center gap-1 flex-shrink-0">
+                            <input type="number" min="0" step="100" value="${custom}" placeholder="${LOW_STOCK_THRESHOLD}"
+                                oninput="updateStationThreshold('${safeAttr}', this.value)"
+                                class="premium-input !py-1 !px-2 text-xs w-24 text-right" />
+                            <span class="text-[10px] text-gray-400 w-8">LTR</span>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        const formatNumber = (value) => new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(value || 0);
+        const formatLiters = (value) => formatNumber(value) + ' LTR';
+
+        const parseNumber = (value) => {
+            if (!value) return 0;
+            const cleanStr = String(value).replace(/,/g, '').replace(/LTR/g, '').trim();
+            const num = parseFloat(cleanStr);
+            return isNaN(num) ? 0 : num;
+        };
+
+        // ===== SNAPSHOT =====
+        function takeSnapshot() {
+            const main = document.getElementById('main-content');
+            html2canvas(main, {
+                scale: 2,
+                useCORS: true,
+                backgroundColor: '#f6f8fc',
+                allowTaint: true,
+                logging: false
+            }).then(canvas => {
+                const link = document.createElement('a');
+                link.download = 'Reben_Dashboard_Snapshot.png';
+                link.href = canvas.toDataURL('image/png');
+                link.click();
+                showToast('Snapshot downloaded!', 'success');
+            }).catch(err => {
+                console.error(err);
+                showToast('Failed to capture snapshot.', 'error');
+            });
+        }
+
+        // ===== URL SHARING =====
+        function encodeFilters() {
+            const station = document.getElementById('stationInput').value;
+            const months = selectedMonths.join(',');
+            const params = new URLSearchParams();
+            if (station) params.set('station', station);
+            if (months) params.set('months', months);
+            return params.toString();
+        }
+
+        function shareCurrentView() {
+            const url = window.location.origin + window.location.pathname + '?' + encodeFilters();
+            navigator.clipboard.writeText(url).then(() => {
+                showToast('Shareable URL copied to clipboard!');
+            }).catch(() => {
+                const input = document.createElement('input');
+                input.value = url;
+                document.body.appendChild(input);
+                input.select();
+                document.execCommand('copy');
+                document.body.removeChild(input);
+                showToast('Shareable URL copied!');
+            });
+        }
+
+        function loadFiltersFromURL() {
+            const params = new URLSearchParams(window.location.search);
+            const station = params.get('station');
+            const months = params.get('months');
+            if (station) document.getElementById('stationInput').value = station;
+            if (months) {
+                selectedMonths = months.split(',').filter(m => MONTHS_ORDER.includes(m));
+                renderMonthTags();
+            }
+        }
+
+        // ===== NOTIFICATIONS =====
+        function checkNotifications(data) {
+            const active = selectedMonths.length > 0 ? selectedMonths : MONTHS_ORDER;
+            let alertMsg = '';
+            active.forEach(m => {
+                const filtered = data.filter(d => d.month.toLowerCase() === m.toLowerCase());
+                const initAramco = filtered.reduce((a, c) => a + c.s91_init + c.s91_aramco + c.s95_init + c.s95_aramco + c
+                    .diesel_init + c.diesel_aramco, 0);
+                const sales = filtered.reduce((a, c) => a + c.s91_sales + c.s95_sales + c.diesel_sales, 0);
+                const loss = initAramco - sales;
+                if (initAramco > 0 && (loss / initAramco) > 0.20) {
+                    alertMsg += `⚠️ ${m} loss ${(loss/initAramco*100).toFixed(1)}% (${formatLiters(loss)}). `;
+                }
+            });
+            if (alertMsg) {
+                document.getElementById('notificationText').textContent = alertMsg;
+                document.getElementById('notificationBanner').classList.remove('hidden');
+            } else {
+                document.getElementById('notificationBanner').classList.add('hidden');
+            }
+        }
+
+        // ===== FORECASTING =====
+        function linearRegression(x, y) {
+            const n = x.length;
+            const sumX = x.reduce((a, b) => a + b, 0);
+            const sumY = y.reduce((a, b) => a + b, 0);
+            const sumXY = x.reduce((a, b, i) => a + b * y[i], 0);
+            const sumX2 = x.reduce((a, b) => a + b * b, 0);
+            const slope = (n * sumXY - sumX * sumY) / (n * sumX2 - sumX * sumX);
+            const intercept = (sumY - slope * sumX) / n;
+            return { slope, intercept };
+        }
+
+        // ===== TOAST =====
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            document.getElementById('toastMessage').textContent = message;
+            toast.className = 'toast show ' + type;
+            setTimeout(() => toast.classList.remove('show'), 4000);
+        }
+
+        // ===== MONTH TAGS =====
+        function renderMonthTags() {
+            const container = document.getElementById('monthTagsContainer');
+            container.innerHTML = '';
+            MONTHS_ORDER.forEach((m) => {
+                const checked = selectedMonths.includes(m);
+                const tag = document.createElement('label');
+                tag.className = `month-tag ${checked ? 'active' : ''}`;
+                tag.innerHTML =
+                    `<input type="checkbox" value="${m}" ${checked ? 'checked' : ''} onchange="toggleMonth('${m}')" class="hidden"><span>${m.substring(0, 3)}</span>`;
+                container.appendChild(tag);
+            });
+            document.getElementById('activeCount').textContent = selectedMonths.length;
+        }
+
+        function toggleMonth(month) {
+            selectedMonths = selectedMonths.includes(month) ? selectedMonths.filter(m => m !== month) : [...selectedMonths,
+                month
+            ];
+            renderMonthTags();
+            updateDashboard();
+        }
+
+        function toggleAllMonths(selectAll) {
+            selectedMonths = selectAll ? [...MONTHS_ORDER] : [];
+            renderMonthTags();
+            updateDashboard();
+        }
+
+        function clearMonthFilter() {
+            selectedMonths = [];
+            renderMonthTags();
+            document.getElementById('stationInput').value = '';
+            currentPage = 1;
+            updateDashboard();
+        }
+
+        // ===== FETCH DATA =====
+        async function fetchGoogleSheetData() {
+            document.getElementById('errorBanner').classList.add('hidden');
+            const dot = document.getElementById('statusDot');
+            const txt = document.getElementById('statusText');
+            const sheetId = document.getElementById('sheetIdInput').value.trim();
+            const tabName = document.getElementById('tabNameInput').value.trim() || 'Master';
+
+            dot.className = 'status-dot connecting';
+            txt.textContent = 'Fetching Master tab…';
+            isLoading = true;
+
+            // Show skeletons
+            showSkeletons(true);
+
+            const gvizUrl =
+                `https://docs.google.com/spreadsheets/d/${sheetId}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tabName)}&tq=${encodeURIComponent('SELECT *')}`;
+
+            try {
+                const response = await fetch(gvizUrl);
+                if (!response.ok) throw new Error('Failed to fetch Master tab from Google Sheet.');
+                const csvText = await response.text();
+                const parsedRows = parseCSV(csvText);
+
+                rawDataset = [];
+                for (let i = 1; i < parsedRows.length; i++) {
+                    const row = parsedRows[i];
+                    if (!row || row.length < 23) continue;
+
+                    const slNo = row[0] ? row[0].trim() : '';
+                    const region = row[1] ? row[1].trim() : '';
+                    const month = row[2] ? row[2].trim() : 'All';
+                    const stationName = row[3] ? row[3].trim() : '';
+
+                    if (!stationName || stationName.toLowerCase().includes('station name')) continue;
+
+                    const s91_sales = parseNumber(row[4]);
+                    const s91_init = parseNumber(row[5]);
+                    const s91_net = parseNumber(row[6]);
+                    const s91_aramco = parseNumber(row[7]);
+                    const s91_count = parseNumber(row[8]);
+
+                    const s95_sales = parseNumber(row[9]);
+                    const s95_init = parseNumber(row[10]);
+                    const s95_net = parseNumber(row[11]);
+                    const s95_aramco = parseNumber(row[12]);
+                    const s95_count = parseNumber(row[13]);
+
+                    const diesel_sales = parseNumber(row[14]);
+                    const diesel_init = parseNumber(row[15]);
+                    const diesel_net = parseNumber(row[16]);
+                    const diesel_aramco = parseNumber(row[17]);
+                    const diesel_count = parseNumber(row[18]);
+
+                    const s91_cont_stock = parseNumber(row[19] || 0);
+                    const s95_cont_stock = parseNumber(row[20] || 0);
+                    const diesel_cont_stock = parseNumber(row[21] || 0);
+                    const status = row[22] ? row[22].trim() : '';
+
+                    rawDataset.push({
+                        id: i,
+                        slNo: slNo,
+                        region: region,
+                        month: month,
+                        station: stationName,
+
+                        s91_sales: s91_sales,
+                        s91_init: s91_init,
+                        s91_net: s91_net,
+                        s91_aramco: s91_aramco,
+                        s91_count: s91_count,
+                        s91_cont_stock: s91_cont_stock,
+
+                        s95_sales: s95_sales,
+                        s95_init: s95_init,
+                        s95_net: s95_net,
+                        s95_aramco: s95_aramco,
+                        s95_count: s95_count,
+                        s95_cont_stock: s95_cont_stock,
+
+                        diesel_sales: diesel_sales,
+                        diesel_init: diesel_init,
+                        diesel_net: diesel_net,
+                        diesel_aramco: diesel_aramco,
+                        diesel_count: diesel_count,
+                        diesel_cont_stock: diesel_cont_stock,
+
+                        status: status,
+
+                        s91: s91_sales,
+                        s95: s95_sales,
+                        diesel: diesel_sales,
+                        totalSales: s91_sales + s95_sales + diesel_sales,
+                        totalNetSupply: s91_net + s95_net + diesel_net,
+                        totalInitStock: s91_init + s95_init + diesel_init,
+                        totalSupplyCount: s91_count + s95_count + diesel_count
+                    });
+                }
+
+                if (rawDataset.length === 0) throw new Error('Master sheet loaded but no valid data rows were found.');
+
+                dot.className = 'status-dot';
+                txt.textContent = `Connected (${rawDataset.length} rows)`;
+                showToast(`Master tab synced with ${rawDataset.length} station records!`);
+
+                populateDatalist();
+                isLoading = false;
+                showSkeletons(false);
+                updateDashboard();
+            } catch (err) {
+                console.error(err);
+                dot.className = 'status-dot error';
+                txt.textContent = 'Sync Error';
+                document.getElementById('errorMessageText').innerHTML = err.message;
+                document.getElementById('errorBanner').classList.remove('hidden');
+                isLoading = false;
+                showSkeletons(false);
+            }
+        }
+
+        function parseCSV(text) {
+            const lines = [];
+            let row = [],
+                inQuotes = false,
+                cur = '';
+            for (let i = 0; i < text.length; i++) {
+                const c = text[i],
+                    n = text[i + 1];
+                if (c === '"') { if (inQuotes && n === '"') { cur += '"';
+                        i++; } else inQuotes = !inQuotes; } else if (c === ',' && !inQuotes) { row.push(cur);
+                    cur = ''; } else if ((c === '\r' || c === '\n') && !inQuotes) {
+                    if (c === '\r' && n === '\n') i++;
+                    row.push(cur);
+                    lines.push(row);
+                    row = [];
+                    cur = '';
+                } else { cur += c; }
+            }
+            if (cur || row.length > 0) { row.push(cur);
+                lines.push(row); }
+            return lines;
+        }
+
+        // ===== SKELETONS =====
+        function showSkeletons(show) {
+            // Simple implementation: we'll replace content with skeleton placeholders
+            // Since this is a single-page app, we can use a class toggle on a wrapper.
+            // For simplicity, we'll just clear and show a loading message in tables and cards.
+            // Actually, we'll show a skeleton overlay for the table and KPIs.
+            // We'll use a small loading indicator in the table.
+            if (show) {
+                document.getElementById('tableBody').innerHTML =
+                    `<tr><td colspan="19" class="text-center py-8"><div class="skeleton h-8 w-3/4 mx-auto"></div></td></tr>`;
+                document.getElementById('tableFoot').innerHTML = '';
+                document.getElementById('tableRecordCount').textContent = 'Loading…';
+                // Stock status table
+                document.getElementById('stockStatusBody').innerHTML =
+                    `<tr><td colspan="6"><div class="skeleton h-8 w-full"></div></td></tr>`;
+            } else {
+                // Will be re-rendered by updateDashboard
+            }
+        }
+
+        // ===== POPULATE DATALIST =====
+        function populateDatalist() {
+            const dl = document.getElementById('stationsList');
+            dl.innerHTML = '';
+            const uniq = [...new Set(rawDataset.map(i => i.station))];
+            uniq.forEach(s => { const o = document.createElement('option');
+                o.value = s;
+                dl.appendChild(o); });
+            populateComparisonStations();
+        }
+
+        // ===== COMPARISON MODE =====
+        function toggleComparisonMode() {
+            comparisonMode = !comparisonMode;
+            document.getElementById('comparisonPanel').classList.toggle('hidden', !comparisonMode);
+            if (comparisonMode) { populateComparisonStations();
+                renderComparisonChart(); }
+        }
+
+        function populateComparisonStations() {
+            const container = document.getElementById('comparisonStationList');
+            if (!container) return;
+            container.innerHTML = '';
+            const uniq = [...new Set(rawDataset.map(i => i.station))].sort();
+            uniq.forEach(station => {
+                const checked = selectedComparisonStations.includes(station);
+                const tag = document.createElement('label');
+                tag.className = `month-tag ${checked ? 'active' : ''}`;
+                tag.innerHTML =
+                    `<input type="checkbox" value="${station}" ${checked ? 'checked' : ''} onchange="toggleComparisonStation('${station.replace(/'/g, "\\'")}')" class="hidden"><span>${station}</span>`;
+                container.appendChild(tag);
+            });
+        }
+
+        function toggleComparisonStation(station) {
+            selectedComparisonStations = selectedComparisonStations.includes(station) ? selectedComparisonStations.filter(
+                s => s !== station) : [...selectedComparisonStations, station];
+            populateComparisonStations();
+            renderComparisonChart();
+        }
+
+        function renderComparisonChart() {
+            if (!stationComparisonChart) return;
+            const monthsToUse = selectedMonths.length > 0 ? selectedMonths : MONTHS_ORDER;
+            const volumes = selectedComparisonStations.map(st => rawDataset.filter(r => r.station === st && (monthsToUse
+                .some(m => m.toLowerCase() === r.month.toLowerCase()) || r.month === 'All')).reduce((a, c) => a + c
+                .totalSales, 0));
+            const netSupplies = selectedComparisonStations.map(st => rawDataset.filter(r => r.station === st && (monthsToUse
+                .some(m => m.toLowerCase() === r.month.toLowerCase()) || r.month === 'All')).reduce((a, c) => a + c
+                .totalNetSupply, 0));
+
+            stationComparisonChart.data.labels = selectedComparisonStations;
+            stationComparisonChart.data.datasets = [
+                { label: 'Total Sales (LTR)', data: volumes, backgroundColor: COLOR_VOLUME },
+                { label: 'Net Supply (LTR)', data: netSupplies, backgroundColor: COLOR_SUPPLY_LINE }
+            ];
+            stationComparisonChart.update();
+        }
+
+        // ===== SORT =====
+        function sortTable(key) {
+            if (key === 'slNo') {
+                sortKey = null;
+                sortDir = 'asc';
+            } else {
+                sortDir = (sortKey === key && sortDir === 'asc') ? 'desc' : 'asc';
+                sortKey = key;
+            }
+            currentPage = 1;
+            renderTable(sortData(lastFilteredData));
+            updateSortIndicators();
+        }
+
+        function sortData(data) {
+            if (!sortKey) return data;
+            return [...data].sort((a, b) => {
+                let av = a[sortKey],
+                    bv = b[sortKey];
+                if (typeof av === 'string') return sortDir === 'asc' ? av.localeCompare(bv) : bv.localeCompare(av);
+                return sortDir === 'asc' ? (av || 0) - (bv || 0) : (bv || 0) - (av || 0);
+            });
+        }
+
+        function updateSortIndicators() {
+            document.querySelectorAll('.sort-icon').forEach(icon => {
+                icon.className = 'fa-solid fa-sort sort-icon';
+                const key = icon.getAttribute('data-key');
+                if (key === sortKey) {
+                    icon.classList.add('active');
+                    if (sortDir === 'asc') {
+                        icon.classList.remove('fa-sort');
+                        icon.classList.add('fa-sort-up');
+                    } else {
+                        icon.classList.remove('fa-sort');
+                        icon.classList.add('fa-sort-down');
+                    }
+                }
+            });
+        }
+
+        // ===== CHARTS INIT =====
+        Chart.defaults.color = '#4b5563';
+
+        function initCharts() {
+            fuelShareChart = new Chart(document.getElementById('fuelShareChart').getContext('2d'), {
+                type: 'doughnut',
+                data: { labels: ['91 Gasoline', '95 Gasoline', 'Diesel'], datasets: [{ data: [0, 0, 0],
+                        backgroundColor: [COLOR_91, COLOR_95, COLOR_DIESEL] }] },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 12, padding: 12 } } },
+                    onClick: (e, item) => {
+                        if (item.length > 0) {
+                            const index = item[0].index;
+                            const label = fuelShareChart.data.labels[index];
+                            showToast(`Showing ${label} – use filters to refine`, 'info');
+                        }
+                    }
+                }
+            });
+
+            monthlyGradeBarChart = new Chart(document.getElementById('monthlyGradeBarChart').getContext('2d'), {
+                type: 'bar',
+                data: { labels: [], datasets: [] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom',
+                            labels: { boxWidth: 10, padding: 10 } } } }
+            });
+
+            monthlyExpenseBarChart = new Chart(document.getElementById('monthlyExpenseBarChart').getContext('2d'), {
+                type: 'bar',
+                data: { labels: [], datasets: [] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom',
+                            labels: { boxWidth: 10, padding: 10 } } } }
+            });
+
+            monthlyTrendChart = new Chart(document.getElementById('monthlyTrendChart').getContext('2d'), {
+                type: 'bar',
+                data: { labels: [], datasets: [] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom',
+                            labels: { boxWidth: 10, padding: 10 } } } }
+            });
+
+            stationComparisonChart = new Chart(document.getElementById('stationComparisonChart').getContext('2d'), {
+                type: 'bar',
+                data: { labels: [], datasets: [] },
+                options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { position: 'bottom',
+                            labels: { boxWidth: 10, padding: 10 } } } }
+            });
+
+            monthlyLossChart = new Chart(document.getElementById('monthlyLossChart').getContext('2d'), {
+                type: 'bar',
+                data: { labels: [], datasets: [] },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: { legend: { position: 'bottom', labels: { boxWidth: 10, padding: 10 } } },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: { callback: function(value) { return value + ' LTR'; } }
+                        }
+                    },
+                    onClick: (e, item) => {
+                        if (item.length > 0) {
+                            const index = item[0].index;
+                            const month = monthlyLossChart.data.labels[index];
+                            if (month) {
+                                selectedMonths = [MONTHS_ORDER.find(m => m.substring(0, 3) === month) || month];
+                                renderMonthTags();
+                                currentPage = 1;
+                                updateDashboard();
+                                showToast(`Filtered to ${month}`, 'info');
+                            }
+                        }
+                    }
+                }
+            });
+
+            const productOptions = {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { position: 'bottom', labels: { boxWidth: 9, padding: 8, fontSize: 9 } } },
+                scales: {
+                    y: {
+                        beginAtZero: true,
+                        ticks: { callback: function(value) { return value + ' LTR'; } }
+                    }
+                }
+            };
+            product91Chart = new Chart(document.getElementById('product91Chart').getContext('2d'), {
+                type: 'bar',
+                data: { labels: [], datasets: [] },
+                options: productOptions
+            });
+            product95Chart = new Chart(document.getElementById('product95Chart').getContext('2d'), {
+                type: 'bar',
+                data: { labels: [], datasets: [] },
+                options: productOptions
+            });
+            productDieselChart = new Chart(document.getElementById('productDieselChart').getContext('2d'), {
+                type: 'bar',
+                data: { labels: [], datasets: [] },
+                options: productOptions
+            });
+        }
+
+        // ===== UPDATE DASHBOARD =====
+        document.getElementById('stationInput').addEventListener('input', (e) => {
+            currentPage = 1;
+            document.getElementById('stationClearBtn').classList.toggle('hidden', e.target.value === '');
+            updateDashboard();
+        });
+        document.getElementById('stationInput').addEventListener('change', (e) => {
+            const val = e.target.value.trim();
+            if (val) addRecentStation(val);
+        });
+        document.getElementById('forecastToggle').addEventListener('change', (e) => {
+            forecastEnabled = e.target.checked;
+            updateDashboard();
+        });
+
+        // ===== RECENT STATION SEARCHES =====
+        let recentStations = [];
+        try {
+            recentStations = JSON.parse(localStorage.getItem('reben_recent_stations') || '[]');
+        } catch (e) {
+            recentStations = [];
+        }
+
+        function addRecentStation(name) {
+            recentStations = [name, ...recentStations.filter(s => s.toLowerCase() !== name.toLowerCase())].slice(0,
+                6);
+            try {
+                localStorage.setItem('reben_recent_stations', JSON.stringify(recentStations));
+            } catch (e) { /* storage unavailable — ignore */ }
+            renderRecentStations();
+        }
+
+        function renderRecentStations() {
+            const wrap = document.getElementById('recentStationsWrap');
+            const container = document.getElementById('recentStationsContainer');
+            if (!wrap || !container) return;
+            if (recentStations.length === 0) {
+                wrap.classList.add('hidden');
+                container.innerHTML = '';
+                return;
+            }
+            wrap.classList.remove('hidden');
+            container.innerHTML = recentStations.map(s => {
+                const safeAttr = s.replace(/'/g, "\\'");
+                return `<button type="button" onclick="selectRecentStation('${safeAttr}')" class="month-tag text-[11px] px-2.5 py-1">${s}</button>`;
+            }).join('');
+        }
+
+        function selectRecentStation(name) {
+            document.getElementById('stationInput').value = name;
+            document.getElementById('stationClearBtn').classList.remove('hidden');
+            currentPage = 1;
+            updateDashboard();
+        }
+
+        function clearRecentStations() {
+            recentStations = [];
+            try {
+                localStorage.removeItem('reben_recent_stations');
+            } catch (e) { /* ignore */ }
+            renderRecentStations();
+        }
+
+        function clearStationSearch() {
+            document.getElementById('stationInput').value = '';
+            document.getElementById('stationClearBtn').classList.add('hidden');
+            currentPage = 1;
+            updateDashboard();
+        }
+
+        function updateDashboard() {
+            if (isLoading) return;
+            const query = document.getElementById('stationInput').value.trim().toLowerCase();
+            let filtered = rawDataset.filter(item => {
+                const matchStation = query === '' || item.station.toLowerCase().includes(query);
+                const matchMonth = selectedMonths.length === 0 || item.month === 'All' || selectedMonths.some(m => m
+                    .toLowerCase() === item.month.toLowerCase());
+                return matchStation && matchMonth;
+            });
+
+            lastFilteredData = filtered;
+            renderTable(sortData(filtered));
+            renderKPIs(filtered);
+            renderCharts(filtered);
+            renderLossChart(filtered);
+            renderProductCharts(filtered);
+            renderStockStatus(filtered);
+            renderStockStatusTable(filtered);
+            if (comparisonMode) renderComparisonChart();
+            updateSortIndicators();
+            checkNotifications(filtered);
+        }
+
+        // ===== TABLE =====
+        function renderTable(data) {
+            const tbody = document.getElementById('tableBody');
+            const tfoot = document.getElementById('tableFoot');
+            const mobileCards = document.getElementById('mobileRecordCards');
+            const totalRows = data.length;
+            const totalPages = Math.ceil(totalRows / pageSize) || 1;
+            if (currentPage > totalPages) currentPage = totalPages;
+
+            const start = (currentPage - 1) * pageSize;
+            const end = Math.min(start + pageSize, totalRows);
+            const pageData = data.slice(start, end);
+
+            tbody.innerHTML = '';
+
+            let totals = {
+                s91_sales: 0,
+                s91_init: 0,
+                s91_net: 0,
+                s91_aramco: 0,
+                s91_count: 0,
+                s95_sales: 0,
+                s95_init: 0,
+                s95_net: 0,
+                s95_aramco: 0,
+                s95_count: 0,
+                diesel_sales: 0,
+                diesel_init: 0,
+                diesel_net: 0,
+                diesel_aramco: 0,
+                diesel_count: 0
+            };
+            let mobileHtml = '';
+
+            const fuelBlock = (label, colorClass, bgClass, sales, init, net, aramco, count) => `
+                    <div class="rounded-lg ${bgClass} border border-gray-100 p-2.5">
+                        <p class="text-[10px] font-bold uppercase tracking-wider ${colorClass} mb-1.5">${label}</p>
+                        <div class="grid grid-cols-2 gap-x-2 gap-y-1 text-[11px]">
+                            <div class="flex justify-between"><span class="text-gray-400">Sales</span><strong class="${colorClass}">${formatNumber(sales)}</strong></div>
+                            <div class="flex justify-between"><span class="text-gray-400">Init</span><strong class="text-gray-700">${formatNumber(init)}</strong></div>
+                            <div class="flex justify-between"><span class="text-gray-400">Net</span><strong class="${colorClass}">${formatNumber(net)}</strong></div>
+                            <div class="flex justify-between"><span class="text-gray-400">Aramco</span><strong class="${colorClass}">${formatNumber(aramco)}</strong></div>
+                            <div class="flex justify-between col-span-2"><span class="text-gray-400">Count</span><strong class="text-gray-800">${formatNumber(count)}</strong></div>
+                        </div>
+                    </div>
+                `;
+
+            pageData.forEach((row, idx) => {
+                const serial = start + idx + 1;
+
+                totals.s91_sales += row.s91_sales;
+                totals.s91_init += row.s91_init;
+                totals.s91_net += row.s91_net;
+                totals.s91_aramco += row.s91_aramco;
+                totals.s91_count += row.s91_count;
+
+                totals.s95_sales += row.s95_sales;
+                totals.s95_init += row.s95_init;
+                totals.s95_net += row.s95_net;
+                totals.s95_aramco += row.s95_aramco;
+                totals.s95_count += row.s95_count;
+
+                totals.diesel_sales += row.diesel_sales;
+                totals.diesel_init += row.diesel_init;
+                totals.diesel_net += row.diesel_net;
+                totals.diesel_aramco += row.diesel_aramco;
+                totals.diesel_count += row.diesel_count;
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-gray-50/60 transition-colors";
+                tr.innerHTML = `
+                        <td class="text-center font-medium text-gray-400 sticky-col sl-no">${serial}</td>
+                        <td class="text-gray-600 sticky-col region">${row.region}</td>
+                        <td class="sticky-col month"><span class="text-xs px-2 py-0.5 rounded-full bg-gray-100/80 font-medium text-gray-700">${row.month}</span></td>
+                        <td class="font-semibold text-gray-800 sticky-col station">${row.station}</td>
+
+                        <td class="text-right text-emerald-600 font-semibold">${formatNumber(row.s91_sales)}</td>
+                        <td class="text-right text-gray-600">${formatNumber(row.s91_init)}</td>
+                        <td class="text-right text-emerald-600 font-semibold">${formatNumber(row.s91_net)}</td>
+                        <td class="text-right text-emerald-600 font-semibold">${formatNumber(row.s91_aramco)}</td>
+                        <td class="text-right font-semibold text-gray-800">${formatNumber(row.s91_count)}</td>
+
+                        <td class="text-right text-red-600 font-semibold">${formatNumber(row.s95_sales)}</td>
+                        <td class="text-right text-gray-600">${formatNumber(row.s95_init)}</td>
+                        <td class="text-right text-red-600 font-semibold">${formatNumber(row.s95_net)}</td>
+                        <td class="text-right text-red-600 font-semibold">${formatNumber(row.s95_aramco)}</td>
+                        <td class="text-right font-semibold text-gray-800">${formatNumber(row.s95_count)}</td>
+
+                        <td class="text-right text-amber-600 font-semibold">${formatNumber(row.diesel_sales)}</td>
+                        <td class="text-right text-gray-600">${formatNumber(row.diesel_init)}</td>
+                        <td class="text-right text-amber-600 font-semibold">${formatNumber(row.diesel_net)}</td>
+                        <td class="text-right text-amber-600 font-semibold">${formatNumber(row.diesel_aramco)}</td>
+                        <td class="text-right font-semibold text-gray-800">${formatNumber(row.diesel_count)}</td>
+                    `;
+                tbody.appendChild(tr);
+
+                mobileHtml += `
+                        <div class="mobile-record-card border-b border-gray-100">
+                            <div class="flex justify-between items-center mb-3">
+                                <div>
+                                    <span class="font-semibold text-gray-800 text-sm block">#${serial} · ${row.station}</span>
+                                    <span class="text-[11px] text-gray-400">${row.region}</span>
+                                </div>
+                                <span class="text-xs bg-gray-100 px-2 py-0.5 rounded-full font-medium text-gray-600 flex-shrink-0">${row.month}</span>
+                            </div>
+                            <div class="grid grid-cols-1 gap-2">
+                                ${fuelBlock('91 Gasoline', 'text-emerald-600', 'bg-emerald-50/50', row.s91_sales, row.s91_init, row.s91_net, row.s91_aramco, row.s91_count)}
+                                ${fuelBlock('95 Gasoline', 'text-red-600', 'bg-red-50/50', row.s95_sales, row.s95_init, row.s95_net, row.s95_aramco, row.s95_count)}
+                                ${fuelBlock('Diesel', 'text-amber-600', 'bg-amber-50/50', row.diesel_sales, row.diesel_init, row.diesel_net, row.diesel_aramco, row.diesel_count)}
+                            </div>
+                        </div>
+                    `;
+            });
+
+            // Grand Total card for mobile — same totals as the desktop table footer,
+            // shown clearly with 91 / 95 / Diesel breakdown so nothing is hidden on small screens.
+            mobileHtml += `
+                    <div class="mobile-record-card bg-gray-50 border-t-2 border-gray-800">
+                        <div class="flex justify-between items-center mb-3">
+                            <span class="font-bold text-gray-800 text-sm uppercase tracking-wide">Grand Total</span>
+                            <span class="text-xs bg-gray-800 text-white px-2 py-0.5 rounded-full font-medium flex-shrink-0">This Page</span>
+                        </div>
+                        <div class="grid grid-cols-1 gap-2">
+                            ${fuelBlock('91 Gasoline', 'text-emerald-700', 'bg-emerald-100/60', totals.s91_sales, totals.s91_init, totals.s91_net, totals.s91_aramco, totals.s91_count)}
+                            ${fuelBlock('95 Gasoline', 'text-red-700', 'bg-red-100/60', totals.s95_sales, totals.s95_init, totals.s95_net, totals.s95_aramco, totals.s95_count)}
+                            ${fuelBlock('Diesel', 'text-amber-700', 'bg-amber-100/60', totals.diesel_sales, totals.diesel_init, totals.diesel_net, totals.diesel_aramco, totals.diesel_count)}
+                        </div>
+                    </div>
+                `;
+
+            tfoot.innerHTML = `
+                    <tr>
+                        <td colspan="4" class="text-right font-bold uppercase text-gray-500 text-[10px] sticky-col sl-no">Grand Total</td>
+
+                        <td class="text-right text-emerald-600 font-bold">${formatNumber(totals.s91_sales)}</td>
+                        <td class="text-right text-gray-700 font-semibold">${formatNumber(totals.s91_init)}</td>
+                        <td class="text-right text-emerald-600 font-bold">${formatNumber(totals.s91_net)}</td>
+                        <td class="text-right text-emerald-600 font-bold">${formatNumber(totals.s91_aramco)}</td>
+                        <td class="text-right text-gray-900 font-bold">${formatNumber(totals.s91_count)}</td>
+
+                        <td class="text-right text-red-600 font-bold">${formatNumber(totals.s95_sales)}</td>
+                        <td class="text-right text-gray-700 font-semibold">${formatNumber(totals.s95_init)}</td>
+                        <td class="text-right text-red-600 font-bold">${formatNumber(totals.s95_net)}</td>
+                        <td class="text-right text-red-600 font-bold">${formatNumber(totals.s95_aramco)}</td>
+                        <td class="text-right text-gray-900 font-bold">${formatNumber(totals.s95_count)}</td>
+
+                        <td class="text-right text-amber-600 font-bold">${formatNumber(totals.diesel_sales)}</td>
+                        <td class="text-right text-gray-700 font-semibold">${formatNumber(totals.diesel_init)}</td>
+                        <td class="text-right text-amber-600 font-bold">${formatNumber(totals.diesel_net)}</td>
+                        <td class="text-right text-amber-600 font-bold">${formatNumber(totals.diesel_aramco)}</td>
+                        <td class="text-right text-gray-900 font-bold">${formatNumber(totals.diesel_count)}</td>
+                    </tr>
+                `;
+
+            mobileCards.innerHTML = mobileHtml;
+            document.getElementById('tableRecordCount').textContent =
+                `Showing ${start+1}–${end} of ${totalRows} entries`;
+
+            // Pagination controls
+            renderPagination(totalRows, totalPages);
+        }
+
+        function renderPagination(totalRows, totalPages) {
+            const container = document.getElementById('paginationContainer');
+            if (totalRows <= pageSize) {
+                container.innerHTML = '';
+                return;
+            }
+            let html = `<button onclick="goToPage(${currentPage-1})" ${currentPage<=1 ? 'disabled' : ''}>Previous</button>`;
+            for (let i = 1; i <= totalPages; i++) {
+                const active = i === currentPage ? 'active' : '';
+                html += `<button class="page-btn ${active}" onclick="goToPage(${i})">${i}</button>`;
+            }
+            html += `<button onclick="goToPage(${currentPage+1})" ${currentPage>=totalPages ? 'disabled' : ''}>Next</button>`;
+            html += `<span class="page-info">${currentPage}/${totalPages}</span>`;
+            container.innerHTML = html;
+        }
+
+        function goToPage(page) {
+            const totalPages = Math.ceil(lastFilteredData.length / pageSize);
+            if (page < 1 || page > totalPages) return;
+            currentPage = page;
+            renderTable(sortData(lastFilteredData));
+            // Scroll to table
+            document.getElementById('section-records').scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }
+
+        // ===== KPIs =====
+        function renderKPIs(data) {
+            const vol = data.reduce((a, r) => a + r.totalSales, 0);
+            const net = data.reduce((a, r) => a + r.totalNetSupply, 0);
+            const init = data.reduce((a, r) => a + r.totalInitStock, 0);
+            const avg = vol / (selectedMonths.length > 0 ? selectedMonths.length : 1);
+
+            document.getElementById('kpiTotalSales').textContent = formatLiters(vol);
+            document.getElementById('kpiTotalNetSupply').textContent = formatLiters(net);
+            document.getElementById('kpiTotalInitStock').textContent = formatLiters(init);
+            document.getElementById('kpiAvgSales').textContent = formatLiters(avg);
+
+            const s91Sales = data.reduce((a, r) => a + r.s91_sales, 0);
+            const s91Net = data.reduce((a, r) => a + r.s91_net, 0);
+            const s91Init = data.reduce((a, r) => a + r.s91_init, 0);
+            const s91Count = data.reduce((a, r) => a + r.s91_count, 0);
+            const s91Aramco = data.reduce((a, r) => a + r.s91_aramco, 0);
+            document.getElementById('kpi91Sales').textContent = formatLiters(s91Sales);
+            document.getElementById('kpi91NetSupply').textContent = formatLiters(s91Net);
+            document.getElementById('kpi91InitStock').textContent = formatLiters(s91Init);
+            document.getElementById('kpi91Count').textContent = formatNumber(s91Count);
+            document.getElementById('kpi91Aramco').textContent = formatLiters(s91Aramco);
+
+            const s95Sales = data.reduce((a, r) => a + r.s95_sales, 0);
+            const s95Net = data.reduce((a, r) => a + r.s95_net, 0);
+            const s95Init = data.reduce((a, r) => a + r.s95_init, 0);
+            const s95Count = data.reduce((a, r) => a + r.s95_count, 0);
+            const s95Aramco = data.reduce((a, r) => a + r.s95_aramco, 0);
+            document.getElementById('kpi95Sales').textContent = formatLiters(s95Sales);
+            document.getElementById('kpi95NetSupply').textContent = formatLiters(s95Net);
+            document.getElementById('kpi95InitStock').textContent = formatLiters(s95Init);
+            document.getElementById('kpi95Count').textContent = formatNumber(s95Count);
+            document.getElementById('kpi95Aramco').textContent = formatLiters(s95Aramco);
+
+            const dSales = data.reduce((a, r) => a + r.diesel_sales, 0);
+            const dNet = data.reduce((a, r) => a + r.diesel_net, 0);
+            const dInit = data.reduce((a, r) => a + r.diesel_init, 0);
+            const dCount = data.reduce((a, r) => a + r.diesel_count, 0);
+            const dAramco = data.reduce((a, r) => a + r.diesel_aramco, 0);
+            document.getElementById('kpiDieselSales').textContent = formatLiters(dSales);
+            document.getElementById('kpiDieselNetSupply').textContent = formatLiters(dNet);
+            document.getElementById('kpiDieselInitStock').textContent = formatLiters(dInit);
+            document.getElementById('kpiDieselCount').textContent = formatNumber(dCount);
+            document.getElementById('kpiDieselAramco').textContent = formatLiters(dAramco);
+
+            const totalSalesAll = s91Sales + s95Sales + dSales;
+            const totalNetAll = s91Net + s95Net + dNet;
+            const totalInitAll = s91Init + s95Init + dInit;
+            const totalCountAll = s91Count + s95Count + dCount;
+            const totalAramcoAll = s91Aramco + s95Aramco + dAramco;
+            document.getElementById('kpiSummarySales').textContent = formatLiters(totalSalesAll);
+            document.getElementById('kpiSummaryNetSupply').textContent = formatLiters(totalNetAll);
+            document.getElementById('kpiSummaryInitStock').textContent = formatLiters(totalInitAll);
+            document.getElementById('kpiSummaryCount').textContent = formatNumber(totalCountAll);
+            document.getElementById('kpiSummaryAramco').textContent = formatLiters(totalAramcoAll);
+        }
+
+        // ===== STOCK STATUS OVERVIEW =====
+        function renderStockStatus(data) {
+            const s91Cont = data.reduce((a, r) => a + r.s91_cont_stock, 0);
+            const s95Cont = data.reduce((a, r) => a + r.s95_cont_stock, 0);
+            const dieselCont = data.reduce((a, r) => a + r.diesel_cont_stock, 0);
+
+            const el91 = document.getElementById('kpi91ContStock');
+            const el95 = document.getElementById('kpi95ContStock');
+            const elDiesel = document.getElementById('kpiDieselContStock');
+
+            const low91 = s91Cont < LOW_STOCK_THRESHOLD && s91Cont > 0;
+            const low95 = s95Cont < LOW_STOCK_THRESHOLD && s95Cont > 0;
+            const lowDiesel = dieselCont < LOW_STOCK_THRESHOLD && dieselCont > 0;
+
+            el91.textContent = formatLiters(s91Cont) + (low91 ? ' ⚠️' : '');
+            el91.className = 'kpi-value mt-0.5 ' + (low91 ? 'blink-low' : 'text-green-700');
+
+            el95.textContent = formatLiters(s95Cont) + (low95 ? ' ⚠️' : '');
+            el95.className = 'kpi-value mt-0.5 ' + (low95 ? 'blink-low' : 'text-pink-700');
+
+            elDiesel.textContent = formatLiters(dieselCont) + (lowDiesel ? ' ⚠️' : '');
+            elDiesel.className = 'kpi-value mt-0.5 ' + (lowDiesel ? 'blink-low' : 'text-amber-700');
+
+            const statusEntries = data.filter(r => r.status && r.status.trim() !== '');
+            const displayStatus = statusEntries.length > 0 ? statusEntries[0].status : '—';
+            const statusEl = document.getElementById('kpiStatus');
+            const statusCard = document.getElementById('kpiStatusCard');
+            const hasStatus = displayStatus && displayStatus.trim() !== '' && displayStatus !== '—';
+
+            statusEl.textContent = displayStatus;
+            if (hasStatus) {
+                // Status available → blink so it's easy for the supplier to spot
+                statusEl.className = 'kpi-value mt-0.5 status-blink-text';
+                statusCard.classList.add('status-blink-card');
+            } else {
+                // No status → stay calm, no blinking
+                statusEl.className = 'kpi-value text-cyan-700 mt-0.5';
+                statusCard.classList.remove('status-blink-card');
+            }
+
+            document.getElementById('stockStatusTimestamp').textContent = 'Updated: ' + new Date().toLocaleString();
+        }
+
+        function renderStockStatusTable(data) {
+            const tbody = document.getElementById('stockStatusBody');
+            const mobileWrap = document.getElementById('stockStatusMobileCards');
+            if (!data || data.length === 0) {
+                tbody.innerHTML =
+                    `<tr><td colspan="6" class="text-center text-gray-400 py-8">No data available. Please sync the sheet.</td></tr>`;
+                mobileWrap.innerHTML = `<p class="text-center text-gray-400 py-8 text-sm">No data available. Please sync the sheet.</p>`;
+                document.getElementById('stockStatusCount').textContent = 'Showing 0 stations';
+                return;
+            }
+
+            const stationMap = {};
+            data.forEach(row => {
+                const key = row.station;
+                if (!stationMap[key]) {
+                    stationMap[key] = {
+                        station: row.station,
+                        s91: 0,
+                        s95: 0,
+                        diesel: 0,
+                        status: row.status || ''
+                    };
+                }
+                stationMap[key].s91 += row.s91_cont_stock;
+                stationMap[key].s95 += row.s95_cont_stock;
+                stationMap[key].diesel += row.diesel_cont_stock;
+                if (row.status && row.status.trim() !== '') {
+                    stationMap[key].status = row.status;
+                }
+            });
+
+            const stations = Object.values(stationMap);
+            const finished = stations.filter(s => s.status && (s.status.toLowerCase().includes('finished')));
+            const others = stations.filter(s => !s.status || !s.status.toLowerCase().includes('finished'));
+            const sortAlpha = (a, b) => a.station.localeCompare(b.station);
+            finished.sort(sortAlpha);
+            others.sort(sortAlpha);
+
+            const sortedStations = [...finished, ...others];
+            document.getElementById('stockStatusCount').textContent = `Showing ${sortedStations.length} stations`;
+
+            let html = '';
+            let mobileHtml = '';
+            let serial = 1;
+            sortedStations.forEach(s => {
+                const threshold = getStationThreshold(s.station);
+                const s91Low = s.s91 < threshold && s.s91 > 0;
+                const s95Low = s.s95 < threshold && s.s95 > 0;
+                const dieselLow = s.diesel < threshold && s.diesel > 0;
+                const s91Class = s91Low ? 'cont-stock low' : 'cont-stock';
+                const s95Class = s95Low ? 'cont-stock low' : 'cont-stock';
+                const dieselClass = dieselLow ? 'cont-stock low' : 'cont-stock';
+                const s91Display = formatLiters(s.s91) + (s91Low ? ' ⚠️' : '');
+                const s95Display = formatLiters(s.s95) + (s95Low ? ' ⚠️' : '');
+                const dieselDisplay = formatLiters(s.diesel) + (dieselLow ? ' ⚠️' : '');
+                const isFinished = s.status && (s.status.toLowerCase().includes('finished'));
+                const hasCustomThreshold = stationThresholds[s.station] !== undefined && stationThresholds[s.station] !==
+                    '';
+                let statusHtml = '';
+                if (isFinished) {
+                    statusHtml = `<span class="blink-badge">${s.status}</span>`;
+                } else {
+                    statusHtml = s.status || '—';
+                }
+                html += `
+                    <tr>
+                        <td class="serial-num">${serial}</td>
+                        <td class="station-name">${s.station}${hasCustomThreshold ? ` <i class="fa-solid fa-sliders text-[9px] text-blue-400" title="Custom threshold: ${formatNumber(threshold)} LTR"></i>` : ''}</td>
+                        <td class="${s91Class}">${s91Display}</td>
+                        <td class="${s95Class}">${s95Display}</td>
+                        <td class="${dieselClass}">${dieselDisplay}</td>
+                        <td>${statusHtml}</td>
+                    </tr>
+                `;
+
+                // Mobile stacked card — same data, no horizontal scrolling required
+                mobileHtml += `
+                    <div class="stock-mobile-card border-b border-gray-100">
+                        <div class="flex justify-between items-center gap-2 mb-2.5">
+                            <span class="font-semibold text-gray-800 text-sm flex items-center gap-1.5 min-w-0">
+                                <span class="text-gray-400 text-xs flex-shrink-0">#${serial}</span>
+                                <span class="truncate">${s.station}</span>
+                                ${hasCustomThreshold ? `<i class="fa-solid fa-sliders text-[9px] text-blue-400 flex-shrink-0" title="Custom threshold: ${formatNumber(threshold)} LTR"></i>` : ''}
+                            </span>
+                            <span class="flex-shrink-0 text-xs">${statusHtml}</span>
+                        </div>
+                        <div class="grid grid-cols-3 gap-2">
+                            <div class="smc-chip bg-green-50/60">
+                                <p class="text-green-600">91 Stock</p>
+                                <p class="${s91Low ? 'text-red-600' : 'text-green-700'}">${s91Display}</p>
+                            </div>
+                            <div class="smc-chip bg-pink-50/60">
+                                <p class="text-pink-600">95 Stock</p>
+                                <p class="${s95Low ? 'text-red-600' : 'text-pink-700'}">${s95Display}</p>
+                            </div>
+                            <div class="smc-chip bg-amber-50/60">
+                                <p class="text-amber-600">Diesel</p>
+                                <p class="${dieselLow ? 'text-red-600' : 'text-amber-700'}">${dieselDisplay}</p>
+                            </div>
+                        </div>
+                    </div>
+                `;
+                serial++;
+            });
+
+            tbody.innerHTML = html;
+            mobileWrap.innerHTML = mobileHtml;
+        }
+
+        // ===== EXPORT STOCK STATUS =====
+        function exportStockStatusExcel() {
+            const data = lastFilteredData;
+            if (!data || data.length === 0) {
+                showToast('No data to export.', 'error');
+                return;
+            }
+
+            const stationMap = {};
+            data.forEach(row => {
+                const key = row.station;
+                if (!stationMap[key]) {
+                    stationMap[key] = { station: row.station, s91: 0, s95: 0, diesel: 0, status: row.status ||
+                            '' };
+                }
+                stationMap[key].s91 += row.s91_cont_stock;
+                stationMap[key].s95 += row.s95_cont_stock;
+                stationMap[key].diesel += row.diesel_cont_stock;
+                if (row.status && row.status.trim() !== '') {
+                    stationMap[key].status = row.status;
+                }
+            });
+
+            const stations = Object.values(stationMap).sort((a, b) => a.station.localeCompare(b.station));
+            const headers = ['#', 'Station Name', '91 Cont. Stock', '95 Cont. Stock', 'Diesel Cont. Stock', 'Status'];
+            const rows = [];
+            let serial = 1;
+            stations.forEach(s => {
+                rows.push([serial, s.station, s.s91, s.s95, s.diesel, s.status || '']);
+                serial++;
+            });
+
+            let csvContent = headers.join(',') + '\n';
+            rows.forEach(row => {
+                csvContent += row.join(',') + '\n';
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'Stock_Status_Report.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            showToast('Stock status exported to Excel!');
+        }
+
+        // ===== SHARED PRINT-REPORT BUILDER (used by all PDF exports) =====
+        function getBrandMarkHtml() {
+            const logoImg = document.querySelector('header img[alt="Company Logo"]');
+            const logoVisible = logoImg && logoImg.style.display !== 'none' && logoImg.complete && logoImg
+                .naturalWidth > 0;
+            return logoVisible ?
+                `<img src="${logoImg.getAttribute('src')}" alt="Reben Petroleum" />` :
+                `<div class="psr-logo-fallback">R</div>`;
+        }
+
+        function setPrintOrientation(orientation, paperSize) {
+            let styleTag = document.getElementById('dynamicPrintOrientation');
+            if (!styleTag) {
+                styleTag = document.createElement('style');
+                styleTag.id = 'dynamicPrintOrientation';
+                document.head.appendChild(styleTag);
+            }
+            const size = paperSize || 'A4';
+            styleTag.textContent = orientation === 'landscape' ?
+                `@page { size: ${size} landscape; margin: 12mm 14mm; }` :
+                `@page { size: ${size} portrait; margin: 14mm 12mm; }`;
+        }
+
+        function renderPrintReport(opts) {
+            const now = new Date();
+            const dateStr = now.toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
+            const timeStr = now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+            const printRoot = document.getElementById('reportPrintRoot');
+            const paperSize = opts.paperSize || 'A4';
+            printRoot.className = (opts.wide ? 'psr-wide ' : '') + (paperSize === 'A3' ? 'psr-a3' : '');
+            printRoot.innerHTML = `
+                <div class="psr-header">
+                    <div class="psr-brand">
+                        ${getBrandMarkHtml()}
+                        <div>
+                            <div class="psr-brand-name">Reben Petroleum</div>
+                            <div class="psr-brand-sub">Operations Dashboard</div>
+                        </div>
+                    </div>
+                    <div class="psr-title-block">
+                        <div class="psr-report-title">${opts.reportTitle}</div>
+                        <div class="psr-report-sub">${opts.reportSub}</div>
+                    </div>
+                </div>
+                <div class="psr-meta">${opts.metaHtml}</div>
+                ${opts.actionHtml || ''}
+                ${opts.bodyHtml}
+                <div class="psr-footer">
+                    <span>Reben Petroleum Operations Dashboard &mdash; for internal supply planning use.</span>
+                    <span>Generated on ${dateStr} at ${timeStr}</span>
+                </div>
+            `;
+            setPrintOrientation(opts.wide ? 'landscape' : 'portrait', paperSize);
+            document.body.classList.add('printing-report');
+            showToast('Opening print dialog — choose "Save as PDF" to download.');
+            setTimeout(() => window.print(), 80);
+        }
+
+        // ===== WHATSAPP SHARE (Stock Status Action Needed summary) =====
+        // ===== SHARE STOCK STATUS ON WHATSAPP =====
+        // Builds a fast, professional, emoji-formatted text message — opens WhatsApp
+        // directly with the message pre-filled. Only FINISHED and LOW STOCK stations
+        // are included, exactly like before, but now with full fuel-type breakdown,
+        // status, greeting, and date/time — no image render or download step needed.
+        function shareStockStatusWhatsApp() {
+            const data = lastFilteredData;
+            if (!data || data.length === 0) {
+                showToast('No data to share.', 'error');
+                return;
+            }
+
+            const stationMap = {};
+            data.forEach(row => {
+                const key = row.station;
+                if (!stationMap[key]) {
+                    stationMap[key] = { station: row.station, s91: 0, s95: 0, diesel: 0, status: row.status ||
+                            '' };
+                }
+                stationMap[key].s91 += row.s91_cont_stock;
+                stationMap[key].s95 += row.s95_cont_stock;
+                stationMap[key].diesel += row.diesel_cont_stock;
+                if (row.status && row.status.trim() !== '') {
+                    stationMap[key].status = row.status;
+                }
+            });
+
+            const stations = Object.values(stationMap);
+            if (stations.length === 0) {
+                showToast('No data to share.', 'error');
+                return;
+            }
+
+            let lowCount = 0;
+            let finishedCount = 0;
+            const actionItems = [];
+            stations.forEach(s => {
+                const threshold = getStationThreshold(s.station);
+                const s91Low = s.s91 < threshold && s.s91 > 0;
+                const s95Low = s.s95 < threshold && s.s95 > 0;
+                const dieselLow = s.diesel < threshold && s.diesel > 0;
+                const isFinished = s.status && s.status.toLowerCase().includes('finished');
+                if (s91Low || s95Low || dieselLow) lowCount++;
+                if (isFinished) finishedCount++;
+                if (s91Low || s95Low || dieselLow || isFinished) {
+                    actionItems.push({
+                        station: s.station,
+                        status: s.status,
+                        isFinished,
+                        s91: s.s91,
+                        s95: s.s95,
+                        diesel: s.diesel,
+                        s91Low,
+                        s95Low,
+                        dieselLow,
+                        threshold
+                    });
+                }
+            });
+            // Finished stations first (most urgent), then alphabetical
+            actionItems.sort((a, b) => (b.isFinished - a.isFinished) || a.station.localeCompare(b.station));
+
+            const now = new Date();
+            const hour = now.getHours();
+            const greeting = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
+            const dateStr = now.toLocaleDateString(undefined, {
+                weekday: 'long',
+                year: 'numeric',
+                month: 'long',
+                day: 'numeric'
+            });
+            const timeStr = now.toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' });
+            const DIVIDER = '━━━━━━━━━━━━━━━━━━';
+
+            let msg = '';
+            msg += `👋 *${greeting}!*\n\n`;
+            msg += `⛽ *REBEN PETROLEUM*\n`;
+            msg += `🛰️ _Stock Status Alert_\n`;
+            msg += `📅 ${dateStr}\n`;
+            msg += `🕒 ${timeStr}\n`;
+            msg += `${DIVIDER}\n`;
+            msg += `📊 *SUMMARY*\n`;
+            msg += `🚨 Finished Stations: *${finishedCount}*\n`;
+            msg += `⚠️ Low Stock Stations: *${lowCount}*\n`;
+            msg += `🏢 Total Stations Tracked: *${stations.length}*\n`;
+            msg += `${DIVIDER}\n\n`;
+
+            if (actionItems.length === 0) {
+                msg += `✅ *All stations are within safe stock levels.*\n`;
+                msg += `No urgent action needed right now. 👍\n\n`;
+            } else {
+                msg += `🔻 *STATIONS NEEDING ATTENTION*\n\n`;
+                actionItems.forEach((a, idx) => {
+                    const num = idx + 1;
+                    if (a.isFinished) {
+                        msg += `*${num}. 🚨 ${a.station}*\n`;
+                        msg += `   Status: *${(a.status || 'FINISHED').toUpperCase()}* ⛔\n`;
+                        msg += `   🟢 91: ${formatLiters(a.s91)}${a.s91Low ? ' ⚠️' : ''}\n`;
+                        msg += `   🔴 95: ${formatLiters(a.s95)}${a.s95Low ? ' ⚠️' : ''}\n`;
+                        msg += `   🟠 Diesel: ${formatLiters(a.diesel)}${a.dieselLow ? ' ⚠️' : ''}\n\n`;
+                    } else {
+                        msg += `*${num}. ⚠️ ${a.station}* — LOW STOCK\n`;
+                        if (a.s91Low) msg += `   🟢 91 Petrol: *${formatLiters(a.s91)}* ⬇️ Low\n`;
+                        if (a.s95Low) msg += `   🔴 95 Petrol: *${formatLiters(a.s95)}* ⬇️ Low\n`;
+                        if (a.dieselLow) msg += `   🟠 Diesel: *${formatLiters(a.diesel)}* ⬇️ Low\n`;
+                        if (a.status) msg += `   Status: ${a.status}\n`;
+                        msg += `\n`;
+                    }
+                });
+                msg += `${DIVIDER}\n`;
+                msg += `📌 Please arrange refill/supply for the above stations.\n\n`;
+            }
+
+            msg += `_Reben Petroleum Operations Dashboard_\n`;
+            msg += `_Auto-generated — for internal supply planning use_`;
+
+            const waUrl = 'https://wa.me/?text=' + encodeURIComponent(msg);
+            window.open(waUrl, '_blank');
+            showToast(actionItems.length > 0 ? 'Opening WhatsApp with alert…' : 'Opening WhatsApp with status update…');
+        }
+
+        function exportStockStatusPDF() {
+            const data = lastFilteredData;
+            if (!data || data.length === 0) {
+                showToast('No data to export.', 'error');
+                return;
+            }
+
+            const stationMap = {};
+            data.forEach(row => {
+                const key = row.station;
+                if (!stationMap[key]) {
+                    stationMap[key] = { station: row.station, s91: 0, s95: 0, diesel: 0, status: row.status ||
+                            '' };
+                }
+                stationMap[key].s91 += row.s91_cont_stock;
+                stationMap[key].s95 += row.s95_cont_stock;
+                stationMap[key].diesel += row.diesel_cont_stock;
+                if (row.status && row.status.trim() !== '') {
+                    stationMap[key].status = row.status;
+                }
+            });
+
+            const finished = Object.values(stationMap).filter(s => s.status && s.status.toLowerCase().includes(
+                'finished'));
+            const others = Object.values(stationMap).filter(s => !s.status || !s.status.toLowerCase().includes(
+                'finished'));
+            const sortAlpha = (a, b) => a.station.localeCompare(b.station);
+            finished.sort(sortAlpha);
+            others.sort(sortAlpha);
+            const stations = [...finished, ...others];
+
+            if (stations.length === 0) {
+                showToast('No data to export.', 'error');
+                return;
+            }
+
+            let lowCount = 0;
+            const actionItems = [];
+            const rowsHtml = stations.map((s, i) => {
+                const threshold = getStationThreshold(s.station);
+                const s91Low = s.s91 < threshold && s.s91 > 0;
+                const s95Low = s.s95 < threshold && s.s95 > 0;
+                const dieselLow = s.diesel < threshold && s.diesel > 0;
+                const isFinished = s.status && s.status.toLowerCase().includes('finished');
+                if (s91Low || s95Low || dieselLow) lowCount++;
+                if (s91Low || s95Low || dieselLow || isFinished) {
+                    const lowFuels = [];
+                    if (s91Low) lowFuels.push('91');
+                    if (s95Low) lowFuels.push('95');
+                    if (dieselLow) lowFuels.push('Diesel');
+                    actionItems.push({ station: s.station, lowFuels, isFinished, status: s.status });
+                }
+                const statusHtml = isFinished ?
+                    `<span class="psr-status-finished">${s.status}</span>` :
+                    (s.status || '\u2014');
+                return `
+                    <tr>
+                        <td class="psr-num">${i + 1}</td>
+                        <td class="psr-station">${s.station}</td>
+                        <td class="psr-stock${s91Low ? ' low' : ''}">${formatLiters(s.s91)}</td>
+                        <td class="psr-stock${s95Low ? ' low' : ''}">${formatLiters(s.s95)}</td>
+                        <td class="psr-stock${dieselLow ? ' low' : ''}">${formatLiters(s.diesel)}</td>
+                        <td>${statusHtml}</td>
+                    </tr>`;
+            }).join('');
+
+            const actionHtml = actionItems.length > 0 ? `
+                <div class="psr-action-box">
+                    <div class="psr-action-title">\u26A0 Action Needed &mdash; ${actionItems.length} Station${actionItems.length > 1 ? 's' : ''}</div>
+                    <div class="psr-action-grid">
+                        ${actionItems.map(a => `
+                            <div class="psr-action-item${a.isFinished ? ' finished' : ''}">
+                                <span class="psr-action-station">${a.station}</span>
+                                <span class="psr-action-detail">${a.isFinished ? 'SUPPLY FINISHED' : ('LOW STOCK: ' + a.lowFuels.join(', '))}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                </div>
+            ` : `
+                <div class="psr-action-box ok">
+                    <div class="psr-action-title">\u2713 All stations within safe stock levels &mdash; no action needed</div>
+                </div>
+            `;
+
+            const metaHtml = `
+                <span>Generated: <strong>${new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })} &middot; ${new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}</strong></span>
+                <span>Total Stations: <strong>${stations.length}</strong></span>
+                <span>Low Stock Alerts: <strong>${lowCount}</strong></span>
+                <span>Supply Finished: <strong>${finished.length}</strong></span>
+            `;
+
+            const tableHtml = `
+                <table>
+                    <thead>
+                        <tr>
+                            <th style="text-align:center;">#</th>
+                            <th>Station Name</th>
+                            <th>91 Cont. Stock</th>
+                            <th>95 Cont. Stock</th>
+                            <th>Diesel Cont. Stock</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rowsHtml}</tbody>
+                </table>
+            `;
+
+            renderPrintReport({
+                reportTitle: 'Stock Status Report',
+                reportSub: 'Continuous stock levels by station',
+                metaHtml,
+                actionHtml,
+                bodyHtml: tableHtml,
+                wide: false
+            });
+        }
+
+        // ===== RECORDS PDF: PAPER SIZE TOGGLE =====
+        let recordsPaperSize = 'A4';
+        function setRecordsPaperSize(size) {
+            recordsPaperSize = size;
+            const a4Btn = document.getElementById('paperSizeA4Btn');
+            const a3Btn = document.getElementById('paperSizeA3Btn');
+            if (size === 'A4') {
+                a4Btn.className = 'px-2.5 py-1.5 bg-gray-800 text-white';
+                a3Btn.className = 'px-2.5 py-1.5 bg-gray-100 text-gray-500';
+            } else {
+                a3Btn.className = 'px-2.5 py-1.5 bg-gray-800 text-white';
+                a4Btn.className = 'px-2.5 py-1.5 bg-gray-100 text-gray-500';
+            }
+        }
+
+        function exportRecordsPDF() {
+            const data = lastFilteredData;
+            if (!data || data.length === 0) {
+                showToast('No data to export.', 'error');
+                return;
+            }
+            const sorted = sortData(data);
+
+            const totals = {
+                s91_sales: 0, s91_init: 0, s91_net: 0, s91_aramco: 0, s91_count: 0,
+                s95_sales: 0, s95_init: 0, s95_net: 0, s95_aramco: 0, s95_count: 0,
+                diesel_sales: 0, diesel_init: 0, diesel_net: 0, diesel_aramco: 0, diesel_count: 0
+            };
+
+            const fuelCols = (sales, init, net, aramco, count, boundary) => {
+                const b = boundary ? ' style="border-left:2px solid #000;"' : '';
+                return `<td${b}>${formatNumber(sales)}</td><td>${formatNumber(init)}</td><td>${formatNumber(net)}</td><td>${formatNumber(aramco)}</td><td>${formatNumber(count)}</td>`;
+            };
+
+            const rowsHtml = sorted.map((row, idx) => {
+                totals.s91_sales += row.s91_sales; totals.s91_init += row.s91_init; totals.s91_net += row.s91_net;
+                totals.s91_aramco += row.s91_aramco; totals.s91_count += row.s91_count;
+                totals.s95_sales += row.s95_sales; totals.s95_init += row.s95_init; totals.s95_net += row.s95_net;
+                totals.s95_aramco += row.s95_aramco; totals.s95_count += row.s95_count;
+                totals.diesel_sales += row.diesel_sales; totals.diesel_init += row.diesel_init;
+                totals.diesel_net += row.diesel_net; totals.diesel_aramco += row.diesel_aramco;
+                totals.diesel_count += row.diesel_count;
+                return `<tr>
+                    <td class="psr-num">${idx + 1}</td>
+                    <td>${row.region}</td>
+                    <td>${row.month}</td>
+                    <td class="psr-station" style="border-left:2px solid #000;">${row.station}</td>
+                    ${fuelCols(row.s91_sales, row.s91_init, row.s91_net, row.s91_aramco, row.s91_count, true)}
+                    ${fuelCols(row.s95_sales, row.s95_init, row.s95_net, row.s95_aramco, row.s95_count, true)}
+                    ${fuelCols(row.diesel_sales, row.diesel_init, row.diesel_net, row.diesel_aramco, row.diesel_count, true)}
+                </tr>`;
+            }).join('');
+
+            const totalsRow = `<tr class="psr-total-row">
+                <td colspan="4" style="text-align:right;">GRAND TOTAL</td>
+                ${fuelCols(totals.s91_sales, totals.s91_init, totals.s91_net, totals.s91_aramco, totals.s91_count, true)}
+                ${fuelCols(totals.s95_sales, totals.s95_init, totals.s95_net, totals.s95_aramco, totals.s95_count, true)}
+                ${fuelCols(totals.diesel_sales, totals.diesel_init, totals.diesel_net, totals.diesel_aramco, totals.diesel_count, true)}
+            </tr>`;
+
+            const metaHtml = `
+                <span>Generated: <strong>${new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })} &middot; ${new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}</strong></span>
+                <span>Total Records: <strong>${sorted.length}</strong></span>
+                <span>Active Months: <strong>${selectedMonths.length ? selectedMonths.join(', ') : 'All'}</strong></span>
+            `;
+
+            const tableHtml = `
+                <table class="psr-wide-table">
+                    <thead>
+                        <tr>
+                            <th rowspan="2" style="text-align:center;">#</th>
+                            <th rowspan="2">Region</th>
+                            <th rowspan="2">Month</th>
+                            <th rowspan="2" style="border-left:2px solid #000;">Station</th>
+                            <th colspan="5" style="text-align:center; border-left:2px solid #000;">91 Gasoline</th>
+                            <th colspan="5" style="text-align:center; border-left:2px solid #000;">95 Gasoline</th>
+                            <th colspan="5" style="text-align:center; border-left:2px solid #000;">Diesel</th>
+                        </tr>
+                        <tr>
+                            <th style="border-left:2px solid #000;">Sales</th><th>Init</th><th>Net</th><th>Aramco</th><th>Count</th>
+                            <th style="border-left:2px solid #000;">Sales</th><th>Init</th><th>Net</th><th>Aramco</th><th>Count</th>
+                            <th style="border-left:2px solid #000;">Sales</th><th>Init</th><th>Net</th><th>Aramco</th><th>Count</th>
+                        </tr>
+                    </thead>
+                    <tbody>${rowsHtml}${totalsRow}</tbody>
+                </table>
+            `;
+
+            renderPrintReport({
+                reportTitle: 'Station Records Report',
+                reportSub: 'Aggregated fuel sales, supply & stock records',
+                metaHtml,
+                bodyHtml: tableHtml,
+                wide: true,
+                paperSize: recordsPaperSize
+            });
+        }
+
+        window.addEventListener('afterprint', () => {
+            document.body.classList.remove('printing-report');
+        });
+
+        // ===== CHARTS =====
+        function renderCharts(data) {
+            const s91 = data.reduce((a, r) => a + r.s91, 0);
+            const s95 = data.reduce((a, r) => a + r.s95, 0);
+            const sd = data.reduce((a, r) => a + r.diesel, 0);
+            fuelShareChart.data.datasets[0].data = [s91, s95, sd];
+            fuelShareChart.update();
+
+            const active = selectedMonths.length > 0 ? MONTHS_ORDER.filter(m => selectedMonths.includes(m)) : MONTHS_ORDER;
+            const labels = active.map(m => m.substring(0, 3));
+
+            const m91 = active.map(m => data.filter(d => d.month.toLowerCase() === m.toLowerCase()).reduce((a, c) => a + c
+                .s91, 0));
+            const m95 = active.map(m => data.filter(d => d.month.toLowerCase() === m.toLowerCase()).reduce((a, c) => a + c
+                .s95, 0));
+            const md = active.map(m => data.filter(d => d.month.toLowerCase() === m.toLowerCase()).reduce((a, c) => a + c
+                .diesel, 0));
+            const mNet = active.map(m => data.filter(d => d.month.toLowerCase() === m.toLowerCase()).reduce((a, c) => a + c
+                .totalNetSupply, 0));
+            const mSales = active.map(m => data.filter(d => d.month.toLowerCase() === m.toLowerCase()).reduce((a, c) => a + c
+                .totalSales, 0));
+
+            if (forecastEnabled && active.length >= 3) {
+                const salesVals = active.map(m => data.filter(d => d.month.toLowerCase() === m.toLowerCase()).reduce((a, c) =>
+                    a + c.totalSales, 0));
+                const netVals = active.map(m => data.filter(d => d.month.toLowerCase() === m.toLowerCase()).reduce((a, c) =>
+                    a + c.totalNetSupply, 0));
+                const x = active.map((_, i) => i);
+                const regSales = linearRegression(x, salesVals);
+                const regNet = linearRegression(x, netVals);
+                const nextX = x.length;
+                const forecastSales = [
+                    regSales.slope * nextX + regSales.intercept,
+                    regSales.slope * (nextX + 1) + regSales.intercept
+                ];
+                const forecastNet = [
+                    regNet.slope * nextX + regNet.intercept,
+                    regNet.slope * (nextX + 1) + regNet.intercept
+                ];
+                const nextMonths = ["F+1", "F+2"];
+                const forecastLabels = [...labels, ...nextMonths];
+                const salesData = [...mSales, ...forecastSales];
+                const netData = [...mNet, ...forecastNet];
+                monthlyTrendChart.data.labels = forecastLabels;
+                monthlyTrendChart.data.datasets = [
+                    { label: 'Total Sales Volume', data: salesData, backgroundColor: COLOR_VOLUME },
+                    { type: 'line', label: 'Total Net Supply (forecast)', data: netData,
+                        borderColor: COLOR_SUPPLY_LINE, borderWidth: 2, fill: false, borderDash: [5, 5] }
+                ];
+                monthlyTrendChart.update();
+            } else {
+                monthlyTrendChart.data.labels = labels;
+                monthlyTrendChart.data.datasets = [
+                    { label: 'Total Sales Volume', data: mSales, backgroundColor: COLOR_VOLUME },
+                    { type: 'line', label: 'Total Net Supply', data: mNet, borderColor: COLOR_SUPPLY_LINE,
+                        borderWidth: 2 }
+                ];
+                monthlyTrendChart.update();
+            }
+
+            const m91Net = active.map(m => data.filter(d => d.month.toLowerCase() === m.toLowerCase()).reduce((a, c) => a + c
+                .s91_net, 0));
+            const m95Net = active.map(m => data.filter(d => d.month.toLowerCase() === m.toLowerCase()).reduce((a, c) => a + c
+                .s95_net, 0));
+            const mdNet = active.map(m => data.filter(d => d.month.toLowerCase() === m.toLowerCase()).reduce((a, c) => a + c
+                .diesel_net, 0));
+
+            monthlyGradeBarChart.data.labels = labels;
+            monthlyGradeBarChart.data.datasets = [
+                { label: '91 Sales', data: m91, backgroundColor: COLOR_91 },
+                { label: '95 Sales', data: m95, backgroundColor: COLOR_95 },
+                { label: 'Diesel Sales', data: md, backgroundColor: COLOR_DIESEL },
+                { type: 'line', label: 'Total Net Supply', data: mNet, borderColor: COLOR_SUPPLY_LINE, borderWidth: 2 }
+            ];
+            monthlyGradeBarChart.update();
+
+            monthlyExpenseBarChart.data.labels = labels;
+            monthlyExpenseBarChart.data.datasets = [
+                { label: '91 Net Supply', data: m91Net, backgroundColor: COLOR_91 },
+                { label: '95 Net Supply', data: m95Net, backgroundColor: COLOR_95 },
+                { label: 'Diesel Net Supply', data: mdNet, backgroundColor: COLOR_DIESEL }
+            ];
+            monthlyExpenseBarChart.update();
+        }
+
+        function renderLossChart(data) {
+            if (!monthlyLossChart) return;
+            const active = selectedMonths.length > 0 ? MONTHS_ORDER.filter(m => selectedMonths.includes(m)) : MONTHS_ORDER;
+            const labels = active.map(m => m.substring(0, 3));
+
+            const initPlusAramco = active.map(m => {
+                const filtered = data.filter(d => d.month.toLowerCase() === m.toLowerCase());
+                const totalInit = filtered.reduce((a, c) => a + c.s91_init + c.s95_init + c.diesel_init, 0);
+                const totalAramco = filtered.reduce((a, c) => a + c.s91_aramco + c.s95_aramco + c.diesel_aramco, 0);
+                return totalInit + totalAramco;
+            });
+            const netSupply = active.map(m => {
+                const filtered = data.filter(d => d.month.toLowerCase() === m.toLowerCase());
+                return filtered.reduce((a, c) => a + c.s91_net + c.s95_net + c.diesel_net, 0);
+            });
+            const sales = active.map(m => {
+                const filtered = data.filter(d => d.month.toLowerCase() === m.toLowerCase());
+                return filtered.reduce((a, c) => a + c.s91_sales + c.s95_sales + c.diesel_sales, 0);
+            });
+            const loss = initPlusAramco.map((val, idx) => val - sales[idx]);
+
+            let datasets = [
+                { label: 'Initial + Aramco', data: initPlusAramco, backgroundColor: 'rgba(59,130,246,0.65)',
+                    borderColor: '#3b82f6', borderWidth: 1 },
+                { label: 'Net Supply', data: netSupply, backgroundColor: 'rgba(251,191,36,0.65)',
+                    borderColor: '#f59e0b', borderWidth: 1 },
+                { label: 'Sales', data: sales, backgroundColor: 'rgba(16,185,129,0.65)', borderColor: '#10b981',
+                    borderWidth: 1 },
+                { label: 'Loss (Init+Aramco - Sales)', data: loss, type: 'line', borderColor: '#ef4444',
+                    backgroundColor: 'rgba(239,68,68,0.08)', borderWidth: 2, fill: false, tension: 0.1,
+                    pointRadius: 3, pointBackgroundColor: '#ef4444', pointBorderColor: '#ffffff',
+                    pointBorderWidth: 1 }
+            ];
+
+            if (forecastEnabled && active.length >= 3) {
+                const x = active.map((_, i) => i);
+                const regLoss = linearRegression(x, loss);
+                const nextX = x.length;
+                const forecastLoss = [
+                    regLoss.slope * nextX + regLoss.intercept,
+                    regLoss.slope * (nextX + 1) + regLoss.intercept
+                ];
+                const forecastLabels = [...labels, 'F+1', 'F+2'];
+                const lossData = [...loss, ...forecastLoss];
+                datasets = datasets.map(ds => {
+                    if (ds.label === 'Loss (Init+Aramco - Sales)') {
+                        return {
+                            ...ds,
+                            data: lossData,
+                            borderDash: [5, 5],
+                            label: 'Loss (forecast)'
+                        };
+                    }
+                    return ds;
+                });
+                monthlyLossChart.data.labels = forecastLabels;
+                monthlyLossChart.data.datasets = datasets;
+            } else {
+                monthlyLossChart.data.labels = labels;
+                monthlyLossChart.data.datasets = datasets;
+            }
+            monthlyLossChart.update();
+        }
+
+        function renderProductCharts(data) {
+            const active = selectedMonths.length > 0 ? MONTHS_ORDER.filter(m => selectedMonths.includes(m)) : MONTHS_ORDER;
+            const labels = active.map(m => m.substring(0, 3));
+
+            function getProductData(productKey) {
+                const initKey = productKey + '_init';
+                const aramcoKey = productKey + '_aramco';
+                const netKey = productKey + '_net';
+                const salesKey = productKey + '_sales';
+
+                const initPlusAramco = active.map(m => {
+                    const filtered = data.filter(d => d.month.toLowerCase() === m.toLowerCase());
+                    return filtered.reduce((a, c) => a + c[initKey] + c[aramcoKey], 0);
+                });
+                const netSupply = active.map(m => {
+                    const filtered = data.filter(d => d.month.toLowerCase() === m.toLowerCase());
+                    return filtered.reduce((a, c) => a + c[netKey], 0);
+                });
+                const sales = active.map(m => {
+                    const filtered = data.filter(d => d.month.toLowerCase() === m.toLowerCase());
+                    return filtered.reduce((a, c) => a + c[salesKey], 0);
+                });
+                const loss = initPlusAramco.map((val, idx) => val - sales[idx]);
+                return { initPlusAramco, netSupply, sales, loss };
+            }
+
+            const p91 = getProductData('s91');
+            const p95 = getProductData('s95');
+            const pDiesel = getProductData('diesel');
+
+            function updateProductChart(chart, data, color) {
+                chart.data.labels = labels;
+                chart.data.datasets = [
+                    { label: 'Initial + Aramco', data: data.initPlusAramco, backgroundColor: 'rgba(59,130,246,0.6)',
+                        borderColor: '#3b82f6', borderWidth: 1 },
+                    { label: 'Net Supply', data: data.netSupply, backgroundColor: 'rgba(251,191,36,0.6)',
+                        borderColor: '#f59e0b', borderWidth: 1 },
+                    { label: 'Sales', data: data.sales, backgroundColor: 'rgba(16,185,129,0.6)',
+                        borderColor: '#10b981', borderWidth: 1 },
+                    { label: 'Loss', data: data.loss, type: 'line', borderColor: '#ef4444',
+                        backgroundColor: 'rgba(239,68,68,0.08)', borderWidth: 2, fill: false, tension: 0.1,
+                        pointRadius: 3, pointBackgroundColor: '#ef4444', pointBorderColor: '#ffffff',
+                        pointBorderWidth: 1 }
+                ];
+                chart.update();
+            }
+
+            updateProductChart(product91Chart, p91);
+            updateProductChart(product95Chart, p95);
+            updateProductChart(productDieselChart, pDiesel);
+        }
+
+        // ===== EXPORT EXCEL =====
+        function exportToExcel() {
+            const data = lastFilteredData;
+            if (!data || data.length === 0) {
+                showToast('No data to export.', 'error');
+                return;
+            }
+
+            const headers = [
+                'Sl No.', 'Region', 'Months', 'Station Name',
+                '91 Sales', '91 Initial', '91 Net Supply', '91 Aramco', '91 Count',
+                '95 Sales', '95 Initial', '95 Net Supply', '95 Aramco', '95 Count',
+                'Diesel Sales', 'Diesel Initial', 'Diesel Net Supply', 'Diesel Aramco', 'Diesel Count'
+            ];
+
+            const rows = [];
+            data.forEach((row, idx) => {
+                rows.push([
+                    idx + 1,
+                    row.region,
+                    row.month,
+                    row.station,
+                    row.s91_sales,
+                    row.s91_init,
+                    row.s91_net,
+                    row.s91_aramco,
+                    row.s91_count,
+                    row.s95_sales,
+                    row.s95_init,
+                    row.s95_net,
+                    row.s95_aramco,
+                    row.s95_count,
+                    row.diesel_sales,
+                    row.diesel_init,
+                    row.diesel_net,
+                    row.diesel_aramco,
+                    row.diesel_count
+                ]);
+            });
+
+            const totals = {
+                s91_sales: 0,
+                s91_init: 0,
+                s91_net: 0,
+                s91_aramco: 0,
+                s91_count: 0,
+                s95_sales: 0,
+                s95_init: 0,
+                s95_net: 0,
+                s95_aramco: 0,
+                s95_count: 0,
+                diesel_sales: 0,
+                diesel_init: 0,
+                diesel_net: 0,
+                diesel_aramco: 0,
+                diesel_count: 0
+            };
+            data.forEach(row => {
+                totals.s91_sales += row.s91_sales;
+                totals.s91_init += row.s91_init;
+                totals.s91_net += row.s91_net;
+                totals.s91_aramco += row.s91_aramco;
+                totals.s91_count += row.s91_count;
+                totals.s95_sales += row.s95_sales;
+                totals.s95_init += row.s95_init;
+                totals.s95_net += row.s95_net;
+                totals.s95_aramco += row.s95_aramco;
+                totals.s95_count += row.s95_count;
+                totals.diesel_sales += row.diesel_sales;
+                totals.diesel_init += row.diesel_init;
+                totals.diesel_net += row.diesel_net;
+                totals.diesel_aramco += row.diesel_aramco;
+                totals.diesel_count += row.diesel_count;
+            });
+            const grandTotalRow = [
+                'Grand Total', '', '', '',
+                totals.s91_sales, totals.s91_init, totals.s91_net, totals.s91_aramco, totals.s91_count,
+                totals.s95_sales, totals.s95_init, totals.s95_net, totals.s95_aramco, totals.s95_count,
+                totals.diesel_sales, totals.diesel_init, totals.diesel_net, totals.diesel_aramco, totals.diesel_count
+            ];
+            rows.push(grandTotalRow);
+
+            let csvContent = headers.join(',') + '\n';
+            rows.forEach(row => {
+                csvContent += row.join(',') + '\n';
+            });
+
+            const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            const url = URL.createObjectURL(blob);
+            link.setAttribute('href', url);
+            link.setAttribute('download', 'Reben_Station_Records.csv');
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+            URL.revokeObjectURL(url);
+            showToast('Data exported successfully!');
+        }
+
+        // ===== INIT =====
+        window.addEventListener('DOMContentLoaded', () => {
+            loadFiltersFromURL();
+            document.getElementById('stationClearBtn').classList.toggle('hidden', document.getElementById(
+                'stationInput').value === '');
+            initCharts();
+            renderMonthTags();
+            renderRecentStations();
+            // Show skeletons until data loads
+            showSkeletons(true);
+            fetchGoogleSheetData();
+        });
+    </script>
+</body>
+</html>
