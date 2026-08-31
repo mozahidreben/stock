@@ -424,138 +424,6 @@
             box-shadow: 0 4px 15px rgba(220, 38, 38, 0.25);
         }
 
-        /* ===== PIN LOCK OVERLAY ===== */
-        .pin-lock-overlay {
-            position: fixed;
-            inset: 0;
-            z-index: 99999;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 20px;
-            background: radial-gradient(circle at 30% 20%, #1b2740 0%, #0b1220 55%, #060a14 100%);
-        }
-        .pin-lock-overlay.hidden {
-            display: none;
-        }
-        .pin-lock-card {
-            width: 100%;
-            max-width: 340px;
-            background: rgba(255, 255, 255, 0.04);
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            backdrop-filter: blur(10px);
-            border-radius: 20px;
-            padding: 32px 26px 26px;
-            text-align: center;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-        }
-        .pin-lock-logo {
-            font-size: 34px;
-            margin-bottom: 10px;
-        }
-        .pin-lock-title {
-            font-size: 17px;
-            font-weight: 800;
-            color: #ffffff;
-            letter-spacing: -0.01em;
-        }
-        .pin-lock-sub {
-            font-size: 11.5px;
-            color: #94a3b8;
-            margin-top: 4px;
-            margin-bottom: 22px;
-        }
-        .pin-lock-select {
-            width: 100%;
-            text-align: center;
-            font-size: 13.5px;
-            font-weight: 600;
-            color: #ffffff;
-            background: rgba(255, 255, 255, 0.06);
-            border: 1.5px solid rgba(255, 255, 255, 0.15);
-            border-radius: 12px;
-            padding: 11px 10px;
-            outline: none;
-            margin-bottom: 10px;
-            transition: border-color 0.15s;
-            appearance: none;
-            -webkit-appearance: none;
-        }
-        .pin-lock-select:focus {
-            border-color: #dc2626;
-        }
-        .pin-lock-select option {
-            background: #0b1220;
-            color: #ffffff;
-        }
-        .pin-lock-input {
-            width: 100%;
-            text-align: center;
-            letter-spacing: 0.5em;
-            font-size: 20px;
-            font-weight: 700;
-            color: #ffffff;
-            background: rgba(255, 255, 255, 0.06);
-            border: 1.5px solid rgba(255, 255, 255, 0.15);
-            border-radius: 12px;
-            padding: 12px 10px;
-            outline: none;
-            transition: border-color 0.15s;
-        }
-        .pin-lock-input:focus {
-            border-color: #dc2626;
-        }
-        .pin-lock-error {
-            color: #f87171;
-            font-size: 11.5px;
-            font-weight: 600;
-            margin-top: 10px;
-        }
-        .pin-lock-btn {
-            width: 100%;
-            margin-top: 16px;
-            background: linear-gradient(135deg, #dc2626, #b91c1c);
-            color: #ffffff;
-            font-size: 13px;
-            font-weight: 700;
-            padding: 11px;
-            border-radius: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 8px;
-            transition: transform 0.15s, box-shadow 0.15s;
-        }
-        .pin-lock-btn:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 20px rgba(220, 38, 38, 0.35);
-        }
-        .pin-lock-footnote {
-            font-size: 10px;
-            color: #64748b;
-            margin-top: 16px;
-            letter-spacing: 0.04em;
-            text-transform: uppercase;
-        }
-        @keyframes pin-shake {
-            0%, 100% { transform: translateX(0); }
-            20% { transform: translateX(-8px); }
-            40% { transform: translateX(8px); }
-            60% { transform: translateX(-6px); }
-            80% { transform: translateX(6px); }
-        }
-        .pin-lock-card.shake {
-            animation: pin-shake 0.4s ease;
-        }
-        body.pin-locked {
-            overflow: hidden;
-        }
-
-        /* ===== READ-ONLY SHARE MODE (?view=stock-only) ===== */
-        html.share-mode .share-hide {
-            display: none !important;
-        }
-
         .error-banner {
             border-left: 4px solid #dc2626;
             background: #fef2f2;
@@ -828,16 +696,20 @@
         }
         /* Wide report modifier (Aggregated Master Station Records — landscape) */
         #reportPrintRoot.psr-wide .psr-wide-table {
-            font-size: 8.3px;
+            font-size: 7.6px;
+            table-layout: fixed;
+            width: 100%;
         }
         #reportPrintRoot.psr-wide .psr-wide-table th,
         #reportPrintRoot.psr-wide .psr-wide-table td {
-            padding: 4px 5px;
-            white-space: nowrap;
+            padding: 3px 4px;
+            white-space: normal;
+            word-break: break-word;
+            overflow-wrap: break-word;
         }
         #reportPrintRoot.psr-wide .psr-wide-table td.psr-station {
             white-space: normal;
-            max-width: 130px;
+            word-break: break-word;
         }
         #reportPrintRoot .psr-total-row td {
             background: #e5e5e5 !important;
@@ -900,11 +772,11 @@
         }
         /* A3 paper modifier — scales fonts/padding/logo up so content properly fills the larger sheet */
         #reportPrintRoot.psr-wide.psr-a3 .psr-wide-table {
-            font-size: 12px;
+            font-size: 11px;
         }
         #reportPrintRoot.psr-wide.psr-a3 .psr-wide-table th,
         #reportPrintRoot.psr-wide.psr-a3 .psr-wide-table td {
-            padding: 7px 10px;
+            padding: 6px 7px;
         }
         #reportPrintRoot.psr-a3 .psr-brand-name {
             font-size: 24px;
@@ -1425,43 +1297,14 @@
 </head>
 <body>
 
-    <!-- ===== PIN LOCK OVERLAY =====
-         Simple client-side gate — not real authentication, just keeps the
-         dashboard from being casually seen if the phone/tablet is handed
-         around. Visible by default in the HTML/CSS itself (no flash of
-         data) and only removed by JS once the correct PIN is entered, an
-         unexpired unlock is found in localStorage, or the page is opened
-         as a read-only share link (?view=stock-only). -->
-    <div id="pinLockOverlay" class="pin-lock-overlay">
-        <div class="pin-lock-card" id="pinLockBox">
-            <div class="pin-lock-logo">⛽</div>
-            <h2 class="pin-lock-title">Reben Petroleum</h2>
-            <p class="pin-lock-sub">Operations Dashboard — Sign in to continue</p>
-            <select id="pinUsername" class="pin-lock-select">
-                <option value="" disabled selected>Select your name</option>
-            </select>
-            <input type="password" id="pinInput" class="pin-lock-input" inputmode="numeric" pattern="[0-9]*" maxlength="6" autocomplete="off" placeholder="• • • •" onkeydown="if(event.key==='Enter') submitPin();" />
-            <p id="pinError" class="pin-lock-error hidden"><i class="fa-solid fa-triangle-exclamation"></i> Please select your name and enter the correct PIN.</p>
-            <button type="button" onclick="submitPin()" class="pin-lock-btn">
-                <i class="fa-solid fa-lock-open"></i> Unlock Dashboard
-            </button>
-            <p class="pin-lock-footnote">Each user has their own PIN — authorized personnel only</p>
-        </div>
-    </div>
-
     <!-- TOAST -->
     <div id="toast" class="toast" role="alert" aria-live="polite">
         <i class="fa-solid fa-circle-check text-emerald-400"></i>
         <span id="toastMessage">Data synced successfully!</span>
     </div>
 
-    <!-- SHARE-MODE BANNER — only shown when opened via a read-only share link -->
-    <div id="shareModeBanner" class="hidden bg-cyan-600 text-white text-center text-xs font-semibold py-2 px-3">
-        <i class="fa-solid fa-eye"></i> Read-only live view — Stock Status Overview only
-    </div>
-
     <!-- NOTIFICATION BANNER -->
-    <div id="notificationBanner" class="hidden fixed top-20 left-0 right-0 z-40 mx-4 md:mx-auto max-w-3xl bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg shadow-lg share-hide">
+    <div id="notificationBanner" class="hidden fixed top-20 left-0 right-0 z-40 mx-4 md:mx-auto max-w-3xl bg-yellow-50 border-l-4 border-yellow-400 p-4 rounded-lg shadow-lg">
         <div class="flex items-start">
             <div class="flex-shrink-0">
                 <i class="fa-solid fa-triangle-exclamation text-yellow-500 text-lg"></i>
@@ -1487,18 +1330,14 @@
                 </div>
                 <div class="hidden sm:block border-l border-gray-200 pl-3 min-w-0">
                     <h1 class="font-display text-lg font-bold tracking-tight text-gray-800 truncate">Reben Petroleum</h1>
-                    <p id="headerSubtitle" class="text-[9px] font-medium text-gray-400 tracking-[0.15em] uppercase truncate">Operations Dashboard</p>
+                    <p class="text-[9px] font-medium text-gray-400 tracking-[0.15em] uppercase truncate">Operations Dashboard</p>
                 </div>
             </div>
 
-            <div class="flex items-center gap-1.5 sm:gap-2 no-print flex-shrink-0 share-hide">
+            <div class="flex items-center gap-1.5 sm:gap-2 no-print flex-shrink-0">
                 <!-- Dark mode toggle -->
                 <button onclick="toggleDarkMode()" class="text-gray-400 hover:text-gray-600 px-2.5 py-1.5 rounded-lg bg-gray-50 hover:bg-gray-100 transition border border-gray-200 text-sm" title="Toggle dark mode">
                     <i id="darkModeIcon" class="fa-solid fa-moon"></i>
-                </button>
-                <!-- Log out — clears this device's saved login and shows the PIN screen again -->
-                <button onclick="logoutPin()" class="hidden sm:inline-flex text-gray-400 hover:text-gray-600 px-2.5 py-1.5 rounded-lg bg-gray-50 hover:bg-gray-100 transition border border-gray-200 text-sm" title="Log out">
-                    <i class="fa-solid fa-right-from-bracket"></i>
                 </button>
                 <!-- Snapshot button — hidden on mobile to keep header clean, still available on tablet/desktop -->
                 <button onclick="takeSnapshot()" class="hidden sm:inline-flex text-gray-400 hover:text-gray-600 px-2.5 py-1.5 rounded-lg bg-gray-50 hover:bg-gray-100 transition border border-gray-200 text-sm" title="Download Snapshot">
@@ -1521,7 +1360,7 @@
     </header>
 
     <!-- STICKY QUICK-NAV -->
-    <nav class="sticky top-[64px] z-40 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm no-print share-hide">
+    <nav class="sticky top-[64px] z-40 bg-white/95 backdrop-blur-sm border-b border-gray-100 shadow-sm no-print">
         <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8">
             <div class="flex items-center space-x-1 sm:space-x-2 overflow-x-auto py-2.5 no-scrollbar">
                 <a href="#section-overview" class="nav-link text-xs font-medium text-gray-500 hover:text-brand-gold px-3 py-1.5 rounded-full hover:bg-red-50 transition whitespace-nowrap">Overview</a>
@@ -1564,7 +1403,7 @@
         </section>
 
         <!-- FILTERS -->
-        <section class="card-premium p-5 no-print share-hide">
+        <section class="card-premium p-5 no-print">
             <div class="hidden">
                 <input type="text" id="sheetIdInput" value="1yFkjPB-j5-3-orIbm2I0JTe0i7rdJYckEZn5YFiE79Y" />
                 <input type="text" id="tabNameInput" value="Master" />
@@ -1621,7 +1460,7 @@
                     Stock Status Overview
                     <span class="text-[10px] font-normal text-gray-400" id="stockStatusTimestamp">Updated: —</span>
                 </div>
-                <div class="grid grid-cols-2 gap-1.5 sm:flex sm:items-center sm:gap-2 no-print share-hide">
+                <div class="grid grid-cols-2 gap-1.5 sm:flex sm:items-center sm:gap-2 no-print">
                     <button onclick="toggleThresholdPanel()" class="month-tag w-full sm:w-auto justify-center text-[11px] sm:text-xs px-2 sm:px-3 py-1.5 sm:py-1 bg-gray-100 border-gray-200 hover:bg-gray-200 text-gray-600">
                         <i class="fa-solid fa-sliders"></i> Thresholds
                     </button>
@@ -1633,9 +1472,6 @@
                     </button>
                     <button onclick="exportStockStatusPDF()" class="month-tag w-full sm:w-auto justify-center text-[11px] sm:text-xs px-2 sm:px-3 py-1.5 sm:py-1 bg-blue-50 border-blue-200 hover:bg-blue-100 text-blue-700">
                         <i class="fa-solid fa-file-pdf"></i> PDF
-                    </button>
-                    <button onclick="shareStockStatusLinkWhatsApp()" class="month-tag w-full sm:w-auto justify-center col-span-2 sm:col-span-1 text-[11px] sm:text-xs px-2 sm:px-3 py-1.5 sm:py-1 bg-cyan-50 border-cyan-200 hover:bg-cyan-100 text-cyan-700">
-                        <i class="fa-solid fa-link"></i> Share Link
                     </button>
                 </div>
             </div>
@@ -1731,7 +1567,7 @@
         </section>
 
         <!-- ===== SECTION: OVERVIEW METRICS ===== -->
-        <section id="section-overview" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 share-hide">
+        <section id="section-overview" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div class="card-premium kpi-card relative overflow-hidden">
                 <div class="flex justify-between items-start">
                     <div>
@@ -1775,7 +1611,7 @@
         </section>
 
         <!-- ===== SECTION: 91 GASOLINE METRICS ===== -->
-        <section id="section-91" class="share-hide">
+        <section id="section-91">
             <div class="fuel-row-label mb-2.5">
                 <span class="badge-dot" style="background:#22c55e;"></span>
                 91 Gasoline Metrics
@@ -1835,7 +1671,7 @@
         </section>
 
         <!-- ===== SECTION: 95 GASOLINE METRICS ===== -->
-        <section id="section-95" class="share-hide">
+        <section id="section-95">
             <div class="fuel-row-label mb-2.5">
                 <span class="badge-dot" style="background:#ef4444;"></span>
                 95 Gasoline Metrics
@@ -1895,7 +1731,7 @@
         </section>
 
         <!-- ===== SECTION: DIESEL METRICS ===== -->
-        <section id="section-diesel" class="share-hide">
+        <section id="section-diesel">
             <div class="fuel-row-label mb-2.5">
                 <span class="badge-dot" style="background:#f59e0b;"></span>
                 Diesel Metrics
@@ -2015,7 +1851,7 @@
         </section>
 
         <!-- ===== SECTION: MULTI-STATION COMPARISON ===== -->
-        <section id="section-comparison" class="card-premium p-5 no-print share-hide">
+        <section id="section-comparison" class="card-premium p-5 no-print">
             <div class="flex items-center justify-between mb-3 flex-wrap gap-3">
                 <div>
                     <h2 class="text-sm font-bold text-gray-800 flex items-center gap-2">
@@ -2038,7 +1874,7 @@
         </section>
 
         <!-- ===== SECTION: CHARTS ===== -->
-        <div id="section-charts" class="share-hide">
+        <div id="section-charts">
             <section class="grid grid-cols-1 lg:grid-cols-2 gap-5">
                 <div class="card-premium p-5">
                     <h2 class="text-sm font-bold text-gray-800 mb-0.5">Cumulative Fuel Sales Share</h2>
@@ -2106,7 +1942,7 @@
         </div>
 
         <!-- ===== SECTION: TABLE RECORDS ===== -->
-        <section id="section-records" class="card-premium overflow-hidden share-hide">
+        <section id="section-records" class="card-premium overflow-hidden">
             <div class="px-5 py-3 border-b border-gray-100 flex flex-wrap justify-between items-center gap-2 bg-gray-50/60">
                 <div>
                     <h2 class="text-sm font-bold text-gray-800">Aggregated Master Station Records</h2>
@@ -2189,134 +2025,6 @@
     <div id="reportPrintRoot"></div>
 
     <script>
-        // ===== READ-ONLY SHARE MODE & PIN LOCK =====
-        // Runs first, synchronously, so there's no flash of the full dashboard
-        // before these checks apply.
-
-        // --- Share mode: ?view=stock-only ---
-        function isShareMode() {
-            return new URLSearchParams(window.location.search).get('view') === 'stock-only';
-        }
-
-        if (isShareMode()) {
-            document.documentElement.classList.add('share-mode');
-            const banner = document.getElementById('shareModeBanner');
-            if (banner) banner.classList.remove('hidden');
-        }
-
-        // --- PIN lock ---
-        // NOTE: This is a lightweight client-side gate, not real authentication —
-        // it just keeps the dashboard from being casually browsed if the device is
-        // handed around, and gives each user their own PIN so you know who's who.
-        // Anyone with dev-tools access can bypass it. Edit DASHBOARD_USERS below to
-        // add/remove people or change PINs; PIN_SESSION_HOURS controls how long an
-        // unlock lasts on that device before it asks again.
-        const DASHBOARD_USERS = {
-            'Mozahid': '2580',
-            'Manager': '1122',
-            'Supplier': '4455'
-            // Add more people here: 'Name': 'PIN',
-        };
-        const PIN_SESSION_HOURS = 12;
-        const PIN_STORAGE_KEY = 'reben_pin_unlock_until';
-        const PIN_USER_KEY = 'reben_pin_user';
-
-        function populatePinUserSelect() {
-            const select = document.getElementById('pinUsername');
-            if (!select) return;
-            select.innerHTML = '<option value="" disabled selected>Select your name</option>' +
-                Object.keys(DASHBOARD_USERS).map(name => `<option value="${name}">${name}</option>`).join('');
-        }
-
-        function updateLoggedInLabel(username) {
-            const label = document.getElementById('headerSubtitle');
-            if (label) {
-                label.textContent = username ? `Logged in as ${username}` : 'Operations Dashboard';
-            }
-        }
-
-        function checkPinLock() {
-            populatePinUserSelect();
-            const overlay = document.getElementById('pinLockOverlay');
-            if (isShareMode()) {
-                // Share links are meant to be opened without a PIN
-                overlay.classList.add('hidden');
-                return;
-            }
-            const savedUntil = parseInt(localStorage.getItem(PIN_STORAGE_KEY) || '0', 10);
-            const savedUser = localStorage.getItem(PIN_USER_KEY);
-            if (savedUntil && Date.now() < savedUntil && savedUser && DASHBOARD_USERS[savedUser] !== undefined) {
-                overlay.classList.add('hidden');
-                document.body.classList.remove('pin-locked');
-                updateLoggedInLabel(savedUser);
-                return;
-            }
-            overlay.classList.remove('hidden');
-            document.body.classList.add('pin-locked');
-            setTimeout(() => {
-                const select = document.getElementById('pinUsername');
-                if (select) select.focus();
-            }, 150);
-        }
-
-        function submitPin() {
-            const select = document.getElementById('pinUsername');
-            const input = document.getElementById('pinInput');
-            const username = select.value;
-            const value = (input.value || '').trim();
-
-            if (username && DASHBOARD_USERS[username] !== undefined && value === DASHBOARD_USERS[username]) {
-                localStorage.setItem(PIN_STORAGE_KEY, String(Date.now() + PIN_SESSION_HOURS * 60 * 60 * 1000));
-                localStorage.setItem(PIN_USER_KEY, username);
-                document.getElementById('pinLockOverlay').classList.add('hidden');
-                document.body.classList.remove('pin-locked');
-                document.getElementById('pinError').classList.add('hidden');
-                updateLoggedInLabel(username);
-            } else {
-                const box = document.getElementById('pinLockBox');
-                box.classList.remove('shake');
-                void box.offsetWidth; // restart animation
-                box.classList.add('shake');
-                document.getElementById('pinError').classList.remove('hidden');
-                input.value = '';
-                input.focus();
-            }
-        }
-
-        function logoutPin() {
-            localStorage.removeItem(PIN_STORAGE_KEY);
-            localStorage.removeItem(PIN_USER_KEY);
-            location.reload();
-        }
-
-        // Run immediately — the overlay div already exists in the DOM at this
-        // point (it's declared earlier in <body>), so this removes any flash
-        // of the lock screen for share-mode visitors or already-unlocked users.
-        checkPinLock();
-
-        // --- Share-link generator: builds a read-only Stock Status link and
-        // opens WhatsApp with it ready to send ---
-        function shareStockStatusLinkWhatsApp() {
-            const shareUrl = window.location.origin + window.location.pathname + '?view=stock-only';
-            const now = new Date();
-            const dateStr = now.toLocaleDateString(undefined, { day: 'numeric', month: 'long', year: 'numeric' });
-            let msg = '';
-            msg += `⛽ *REBEN PETROLEUM*\n`;
-            msg += `📊 Live Stock Status — Read-only view\n`;
-            msg += `📅 ${dateStr}\n\n`;
-            msg += `👉 ${shareUrl}\n\n`;
-            msg += `_Tap the link to see real-time fuel stock levels. No login required._`;
-            const waUrl = 'https://wa.me/?text=' + encodeURIComponent(msg);
-            window.open(waUrl, '_blank');
-
-            if (navigator.clipboard && navigator.clipboard.writeText) {
-                navigator.clipboard.writeText(shareUrl).catch(() => {});
-            }
-            if (typeof showToast === 'function') {
-                showToast('Share link ready — link also copied to clipboard.');
-            }
-        }
-
         const MONTHS_ORDER = [
             "January", "February", "March", "April", "May", "June",
             "July", "August", "September", "October", "November", "December"
@@ -3539,7 +3247,7 @@
             }
             const size = paperSize || 'A4';
             styleTag.textContent = orientation === 'landscape' ?
-                `@page { size: ${size} landscape; margin: 12mm 14mm; }` :
+                `@page { size: ${size} landscape; margin: 8mm 6mm; }` :
                 `@page { size: ${size} portrait; margin: 14mm 12mm; }`;
         }
 
@@ -3737,7 +3445,6 @@
             }
 
             let lowCount = 0;
-            const actionItems = [];
             const rowsHtml = stations.map((s, i) => {
                 const threshold = getStationThreshold(s.station);
                 const s91Low = s.s91 < threshold && s.s91 > 0;
@@ -3745,13 +3452,6 @@
                 const dieselLow = s.diesel < threshold && s.diesel > 0;
                 const isFinished = s.status && s.status.toLowerCase().includes('finished');
                 if (s91Low || s95Low || dieselLow) lowCount++;
-                if (s91Low || s95Low || dieselLow || isFinished) {
-                    const lowFuels = [];
-                    if (s91Low) lowFuels.push('91');
-                    if (s95Low) lowFuels.push('95');
-                    if (dieselLow) lowFuels.push('Diesel');
-                    actionItems.push({ station: s.station, lowFuels, isFinished, status: s.status });
-                }
                 const statusHtml = isFinished ?
                     `<span class="psr-status-finished">${s.status}</span>` :
                     (s.status || '\u2014');
@@ -3765,24 +3465,6 @@
                         <td>${statusHtml}</td>
                     </tr>`;
             }).join('');
-
-            const actionHtml = actionItems.length > 0 ? `
-                <div class="psr-action-box">
-                    <div class="psr-action-title">\u26A0 Action Needed &mdash; ${actionItems.length} Station${actionItems.length > 1 ? 's' : ''}</div>
-                    <div class="psr-action-grid">
-                        ${actionItems.map(a => `
-                            <div class="psr-action-item${a.isFinished ? ' finished' : ''}">
-                                <span class="psr-action-station">${a.station}</span>
-                                <span class="psr-action-detail">${a.isFinished ? 'SUPPLY FINISHED' : ('LOW STOCK: ' + a.lowFuels.join(', '))}</span>
-                            </div>
-                        `).join('')}
-                    </div>
-                </div>
-            ` : `
-                <div class="psr-action-box ok">
-                    <div class="psr-action-title">\u2713 All stations within safe stock levels &mdash; no action needed</div>
-                </div>
-            `;
 
             const metaHtml = `
                 <span>Generated: <strong>${new Date().toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' })} &middot; ${new Date().toLocaleTimeString(undefined, { hour: '2-digit', minute: '2-digit' })}</strong></span>
@@ -3811,7 +3493,6 @@
                 reportTitle: 'Stock Status Report',
                 reportSub: 'Continuous stock levels by station',
                 metaHtml,
-                actionHtml,
                 bodyHtml: tableHtml,
                 wide: false
             });
@@ -3885,6 +3566,15 @@
 
             const tableHtml = `
                 <table class="psr-wide-table">
+                    <colgroup>
+                        <col style="width:2.5%;">
+                        <col style="width:5.5%;">
+                        <col style="width:4.5%;">
+                        <col style="width:12.5%;">
+                        <col style="width:5%;"><col style="width:5%;"><col style="width:5%;"><col style="width:5%;"><col style="width:5%;">
+                        <col style="width:5%;"><col style="width:5%;"><col style="width:5%;"><col style="width:5%;"><col style="width:5%;">
+                        <col style="width:5%;"><col style="width:5%;"><col style="width:5%;"><col style="width:5%;"><col style="width:5%;">
+                    </colgroup>
                     <thead>
                         <tr>
                             <th rowspan="2" style="text-align:center;">#</th>
@@ -4221,7 +3911,6 @@
 
         // ===== INIT =====
         window.addEventListener('DOMContentLoaded', () => {
-            checkPinLock();
             loadFiltersFromURL();
             document.getElementById('stationClearBtn').classList.toggle('hidden', document.getElementById(
                 'stationInput').value === '');
